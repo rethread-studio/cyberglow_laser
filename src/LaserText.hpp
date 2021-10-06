@@ -15,6 +15,7 @@ class LaserTextOptions {
 
         LaserTextOptions() {}
         LaserTextOptions(float size): size(size) {}
+        LaserTextOptions(float size, ofColor color): size(size), color(color) {}
 
         float get_horizontal_margin() {
             return horizontal_character_margin * size;
@@ -38,11 +39,30 @@ inline float draw_laser_character(ofxLaser::Manager &laser, char c, LaserTextOpt
             laser.drawLine(glm::vec2(p.x+width*0.5, p.y), glm::vec2(p.x+width, p.y+height), col, profile);
             laser.drawLine(glm::vec2(p.x+width*0.3, p.y+height*0.6), glm::vec2(p.x+width*0.7, p.y+height*0.6), col, profile);
             break;
+        case 'X':
+            width = options.size * 0.6;
+            laser.drawLine(glm::vec2(p.x, p.y), glm::vec2(p.x+width, p.y+height), col, profile);
+            laser.drawLine(glm::vec2(p.x, p.y+height), glm::vec2(p.x+width, p.y), col, profile);
+            break;
+        case 'Y':
+            width = options.size * 0.6;
+            laser.drawLine(glm::vec2(p.x, p.y), glm::vec2(p.x+width*0.5, p.y+height*0.5), col, profile);
+            laser.drawLine(glm::vec2(p.x+width*0.5, p.y+height*0.5), glm::vec2(p.x+width*0.5, p.y+height), col, profile);
+            laser.drawLine(glm::vec2(p.x+width*0.5, p.y+height*0.5), glm::vec2(p.x+width, p.y), col, profile);
+            break;
         case '.':
         {
             width = options.size * 0.2;
             float radius = width * 0.5;
             laser.drawCircle(p+glm::vec2(width*0.5, height-radius), radius, col, profile);
+            break;
+        }
+        case ':':
+        {
+            width = options.size * 0.2;
+            float radius = width * 0.5;
+            laser.drawCircle(p+glm::vec2(width*0.5, height-radius), radius, col, profile);
+            laser.drawCircle(p+glm::vec2(width*0.5, radius), radius, col, profile);
             break;
         }
         case '0':

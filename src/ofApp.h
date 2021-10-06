@@ -5,6 +5,7 @@
 #include "ActivityPoint.hpp"
 #include "EventLine.hpp"
 #include "LaserText.hpp"
+#include "PlayerTrail.hpp"
 
 class ofApp : public ofBaseApp{
 
@@ -31,6 +32,7 @@ class ofApp : public ofBaseApp{
 		glm::vec2 triangle_positions[3];
 		vector<ActivityPoint> activity_points;
 		vector<EventLineColumn> event_line_columns;
+		PlayerTrail player_trail;
 		// Dimensions of the laser canvas
 		int width = 2000;
 		int height = 1000;
