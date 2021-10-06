@@ -4,6 +4,7 @@
 #include "ofxLaserManager.h"
 #include "ActivityPoint.hpp"
 #include "EventLine.hpp"
+#include "LaserText.hpp"
 
 class ofApp : public ofBaseApp{
 

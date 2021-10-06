@@ -71,6 +71,16 @@ void ofApp::draw(){
     for(auto& elc : event_line_columns) {
         elc.draw(laser, scan_x, scan_width);
     }
+
+    // Test drawing text
+    auto text_options = LaserTextOptions();
+    // draw_laser_text(laser, "A0123456789", text_options, glm::vec2(width * 0.4, height * 0.5));
+
+
+    text_options.size = 20.0;
+    text_options.color = ofColor::red;
+    draw_laser_text(laser, to_string(scan_x), text_options, glm::vec2(scan_x, height * 0.5));
+
     // sends points to the DAC
     laser.send();
     // draw the laser UI elements

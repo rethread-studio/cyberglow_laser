@@ -16,9 +16,10 @@ tmp/
 # general
 #########
 
-*/[Bb]uild/
-*/[Oo]bj/
+[Bb]uild/
+[Oo]bj/
 *.o
+*.d
 */[Dd]ebug*/
 */[Rr]elease*/
 *.mode*
