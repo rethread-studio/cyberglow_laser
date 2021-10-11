@@ -8,12 +8,12 @@ void ofApp::setup(){
     laser.setCanvasSize(width, height);
 
     // Set up triangle positions
-    triangle_positions[0] = glm::vec2(width * 0.2, height * 0.85);
-    triangle_positions[1] = glm::vec2(width * 0.5, height * 0.15);
-    triangle_positions[2] = glm::vec2(width * 0.8, height * 0.85);
+    triangle_positions[0] = glm::vec2(width * 0.2 - halfw, height * 0.85 - halfh);
+    triangle_positions[1] = glm::vec2(width * 0.5 - halfw, height * 0.15 - halfh);
+    triangle_positions[2] = glm::vec2(width * 0.8 - halfw, height * 0.85 - halfh);
 
     for(int i = 0; i < 3; i++) {
-        event_line_columns.push_back(EventLineColumn(glm::vec2(i*(width/3), 0), width/3, height));
+        event_line_columns.push_back(EventLineColumn(glm::vec2(i*(width/3) - halfw, -halfh), width/3, height));
     }
 }
 
@@ -40,6 +40,10 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 
+    ofPushMatrix();
+    ofTranslate(halfw, halfh, 0.0);
+    ofRotateRad(mouse_rel_x * 0.5, 0.0, 1.0, 0.0);
+    ofRotateRad(mouse_rel_y * 0.5, 1.0, 0.0, 0.0);
     // Draw using
     // laser.drawLine()
     // laser.drawDot()
@@ -74,15 +78,16 @@ void ofApp::draw(){
 
     // Test drawing text
     auto text_options = LaserTextOptions();
-    draw_laser_text(laser, "AXY0123456789", text_options, glm::vec2(width * 0.4, height * 0.5));
+    draw_laser_text(laser, "AXY0123456789", text_options, glm::vec2(width * 0.4 - halfw, height * 0.5 - halfh));
 
 
     text_options.size = 20.0;
     text_options.color = ofColor::red;
-    draw_laser_text(laser, to_string(scan_x), text_options, glm::vec2(scan_x, height * 0.5));
+    draw_laser_text(laser, to_string(scan_x), text_options, glm::vec2(scan_x, height * 0.5 - halfh));
 
     player_trail.draw(laser);
 
+    ofPopMatrix();
     // sends points to the DAC
     laser.send();
     // draw the laser UI elements
@@ -135,7 +140,9 @@ void ofApp::keyReleased(int key){
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y ){
 
-    scan_x = (float(x)/float(ofGetWidth())) * float(width);
+    scan_x = (float(x)/float(ofGetWidth())) * float(width) - halfw;
+    mouse_rel_x = (float(x)/float(ofGetWidth())) * 2.0 - 1.0;
+    mouse_rel_y = (float(y)/float(ofGetHeight())) * 2.0 - 1.0;
 }
 
 //--------------------------------------------------------------

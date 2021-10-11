@@ -35,9 +35,13 @@ class ofApp : public ofBaseApp{
 		PlayerTrail player_trail;
 		// Dimensions of the laser canvas
 		int width = 2000;
+		int halfw = width/2;
 		int height = 1000;
+		int halfh = height/2;
 
 		float scan_x = 0.0;
-		float scan_width = 40.0;
+		float scan_width = 100.0;
+		float mouse_rel_x = 0.0;
+		float mouse_rel_y = 0.0;
 
 };

@@ -102,8 +102,8 @@ inline float draw_laser_character(ofxLaser::Manager &laser, char c, LaserTextOpt
         case '5':
             width = options.size * 0.6;
             laser.drawLine(glm::vec2(p.x+width, p.y), glm::vec2(p.x, p.y), col, profile);
-            laser.drawLine(glm::vec2(p.x, p.y), glm::vec2(p.x, p.y + height*0.2), col, profile);
-            laser.drawLine(glm::vec2(p.x, p.y+height*0.2), glm::vec2(p.x+width, p.y+height*0.8), col, profile);
+            laser.drawLine(glm::vec2(p.x, p.y), glm::vec2(p.x, p.y + height*0.4), col, profile);
+            laser.drawLine(glm::vec2(p.x, p.y+height*0.4), glm::vec2(p.x+width, p.y+height*0.8), col, profile);
             laser.drawLine(glm::vec2(p.x+width, p.y+height*0.8), glm::vec2(p.x+width, p.y+height), col, profile);
             laser.drawLine(glm::vec2(p.x+width, p.y+height), glm::vec2(p.x, p.y+height), col, profile);
             break;
