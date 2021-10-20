@@ -26,12 +26,21 @@ class PlayerTrail {
         int display_index = 0;
         int index_counter = 0;
         int frames_between = 5;
+        bool finished_cycle = false;
 
         PlayerTrail() {
-            current_position = glm::vec2(300.0, 300.0);
-            trail_positions.push_back(glm::vec2(300.0, 500.0));
-            trail_positions.push_back(glm::vec2(500.0, 500.0));
-            trail_positions.push_back(glm::vec2(700.0, 500.0));
+            current_position = glm::vec2(0.0, 0.0);
+            // trail_positions.push_back(glm::vec2(300.0, 500.0));
+            // trail_positions.push_back(glm::vec2(500.0, 500.0));
+            // trail_positions.push_back(glm::vec2(700.0, 500.0));
+        }
+
+        void move_to_point(int x, int y) {
+            trail_positions.push_back(current_position);
+            current_position = glm::vec2(x, y);
+            while(trail_positions.size() > 3) {
+                trail_positions.erase(trail_positions.begin());
+            }
         }
 
         void randomize_positions() {
@@ -41,16 +50,21 @@ class PlayerTrail {
                 pos += glm::vec2(ofRandom(-10, 10) * 20, ofRandom(-10, 10) * 20);
                 tp = pos;
             }
+        }
 
+        void reset_cycle() {
+            finished_cycle = false;
+            display_index = 0;
         }
 
         void draw(ofxLaser::Manager &laser) {
+            if(!finished_cycle) {
             if(index_counter >= frames_between) {
                 index_counter = 0;
                 display_index += 1;
                 if(display_index > trail_positions.size()*2) {
                     display_index = 0;
-                    randomize_positions();
+                    finished_cycle = true;
                 }
             }
             index_counter++;
@@ -69,6 +83,7 @@ class PlayerTrail {
             }
             if(display_index >= trail_positions.size()) {
                 draw_player(laser, current_position, color);
+            }
             }
         }
 };

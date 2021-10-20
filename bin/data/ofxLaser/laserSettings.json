@@ -1,7 +1,7 @@
 {
     "Laser": {
         "Custom": null,
-        "Edit_laser": "1",
+        "Edit_laser": "0",
         "Global_brightness": "0.2",
         "Global_test_pattern": "0",
         "Interface": {
