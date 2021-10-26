@@ -8,7 +8,15 @@
 #include "EventLine.hpp"
 #include "LaserText.hpp"
 #include "PlayerTrail.hpp"
-#include "WebServerVis.hpp"
+#include "WebServerVis.h"
+
+enum class VisMode {
+WEBSERVER = 0,
+USER,
+ZOOMED_OUT,
+TEXT_DEMO,
+LAST,
+};
 
 class ofApp : public ofBaseApp{
 
@@ -32,6 +40,8 @@ class ofApp : public ofBaseApp{
 		void addRandomActivityPoint();
 		void pickRandomPlayerTrail();
 		void addActivityPoint(int source);
+
+		VisMode vis_mode = VisMode::WEBSERVER;
 
 		ofxLaser::Manager laser;
 		glm::vec2 triangle_positions[3];

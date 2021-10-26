@@ -54,7 +54,7 @@ void ofApp::update(){
     } else {
         pickRandomPlayerTrail();
     }
-    // Update event line columns
+    //Update event line columns
     for(auto& elc : event_line_columns) {
         elc.update();
     }
@@ -78,20 +78,46 @@ void ofApp::draw(){
     //
     // Translating the coordinate system also works
 
-    // int numDots = 6;
-    // for(int x = 0; x<numDots; x++) {
-    //     // intensity is a unit value (0 - 1) that determines how long the laser lingers
-    //     // to make the dot. It defaults to 1.
-    //     float intensity = (float)(x+1)/numDots;
-    //     float xposition = ofMap(x, 0,numDots-1,200,600);
-    //     laser.drawDot(xposition, 600, ofColor::red, intensity, OFXLASER_PROFILE_FAST);
-    // }
 
-    // draw triangle positions
-    float intensity = ofNoise(ofGetElapsedTimef() * 0.05) * 0.7 + 0.3;
-    laser.drawDot(triangle_positions[0].x, triangle_positions[0].y, ofColor::green, intensity, OFXLASER_PROFILE_FAST);
-    laser.drawDot(triangle_positions[1].x, triangle_positions[1].y, ofColor::green, intensity, OFXLASER_PROFILE_FAST);
-    laser.drawDot(triangle_positions[2].x, triangle_positions[2].y, ofColor::green, intensity, OFXLASER_PROFILE_FAST);
+    switch(vis_mode) {
+        case VisMode::WEBSERVER:
+            {
+                web_server_vis.draw(laser);
+            }
+            break;
+        case VisMode::TEXT_DEMO:
+        {
+            auto text_options = LaserTextOptions();
+            text_options.size = 80.0;
+            text_options.color = ofColor::red;
+            draw_laser_text(laser, "AXY0123456789", text_options, glm::vec2(width * 0.4 - halfw, height * 0.5 - halfh));
+            draw_laser_text(laser, "57131", text_options, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh));
+            draw_laser_text(laser, "MOVE OPEN FILE", text_options, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh + (text_options.size * 2)));
+
+
+            text_options.size = 20.0;
+            text_options.color = ofColor::red;
+            // draw_laser_text(laser, to_string(scan_x), text_options, glm::vec2(scan_x, height * 0.5 - halfh));
+        }
+            break;
+        case VisMode::USER:
+        {
+            auto pt = player_trails.find(current_player_trail_id);
+            if(pt != player_trails.end()) {
+                pt->second.draw(laser);
+            }
+        }
+            break;
+        case VisMode::ZOOMED_OUT:
+        {
+            // draw triangle positions
+            // float intensity = ofNoise(ofGetElapsedTimef() * 0.05) * 0.7 + 0.3;
+            // laser.drawDot(triangle_positions[0].x, triangle_positions[0].y, ofColor::green, intensity, OFXLASER_PROFILE_FAST);
+            // laser.drawDot(triangle_positions[1].x, triangle_positions[1].y, ofColor::green, intensity, OFXLASER_PROFILE_FAST);
+            // laser.drawDot(triangle_positions[2].x, triangle_positions[2].y, ofColor::green, intensity, OFXLASER_PROFILE_FAST);
+        }
+            break;
+    }
 
     // draw point activity
     // for(auto& ap : activity_points) {
@@ -103,24 +129,9 @@ void ofApp::draw(){
     // }
 
     // Test drawing text
-    auto text_options = LaserTextOptions();
-    text_options.size = 100.0;
-    text_options.color = ofColor::red;
-    // draw_laser_text(laser, "AXY0123456789", text_options, glm::vec2(width * 0.4 - halfw, height * 0.5 - halfh));
-    draw_laser_text(laser, "57131", text_options, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh));
-    draw_laser_text(laser, "MOVE OPEN FILE", text_options, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh + (text_options.size * 2)));
 
 
-    text_options.size = 20.0;
-    text_options.color = ofColor::red;
-    draw_laser_text(laser, to_string(scan_x), text_options, glm::vec2(scan_x, height * 0.5 - halfh));
 
-    web_server_vis.draw(laser);
-
-    auto pt = player_trails.find(current_player_trail_id);
-    if(pt != player_trails.end()) {
-        pt->second.draw(laser);
-    }
 
 
     ofPopMatrix();
@@ -291,8 +302,8 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
                 auto it = player_trails.find(user_id);
                 if(it == player_trails.end()) {
                     auto pt = PlayerTrail();
-                    float grid_x = width/25;
-                    float grid_y = height/15;
+                    float grid_x = width/45;
+                    float grid_y = height/25;
                     pt.move_to_point((x * grid_x) - halfw, (y * grid_y) - halfh);
                     player_trails.insert(make_pair<string, PlayerTrail>(move(user_id), move(pt)));
                 } else {
@@ -318,7 +329,16 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-
+    switch(key) {
+        case OF_KEY_RIGHT:
+            vis_mode = static_cast<VisMode>((static_cast<int>(vis_mode)+1)%static_cast<int>(VisMode::LAST));
+            break;
+        case OF_KEY_LEFT:
+            if(static_cast<int>(vis_mode) != 0) {
+                vis_mode = static_cast<VisMode>(static_cast<int>(vis_mode)-1);
+            }
+            break;
+    }
 }
 
 //--------------------------------------------------------------
