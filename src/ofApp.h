@@ -8,6 +8,7 @@
 #include "EventLine.hpp"
 #include "LaserText.hpp"
 #include "PlayerTrail.hpp"
+#include "WebServerVis.hpp"
 
 class ofApp : public ofBaseApp{
 
@@ -32,11 +33,12 @@ class ofApp : public ofBaseApp{
 		void pickRandomPlayerTrail();
 		void addActivityPoint(int source);
 
-	ofxLaser::Manager laser;
+		ofxLaser::Manager laser;
 		glm::vec2 triangle_positions[3];
 		vector<ActivityPoint> activity_points;
 		vector<EventLineColumn> event_line_columns;
 		unordered_map<string, PlayerTrail> player_trails;
+		WebServerVis web_server_vis;
 		string current_player_trail_id = "";
 		// Dimensions of the laser canvas
 		int width = 2000;

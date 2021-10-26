@@ -22,7 +22,7 @@ class PlayerTrail {
     public:
         glm::vec2 current_position;
         vector<glm::vec2> trail_positions;
-        ofColor color = ofColor::teal;
+        ofColor color = ofColor::green;
         int display_index = 0;
         int index_counter = 0;
         int frames_between = 5;

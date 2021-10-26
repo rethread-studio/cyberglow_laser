@@ -25,7 +25,7 @@ void ofApp::update(){
 
    checkOscMessages();
 
-   scan_x += 4;
+   scan_x += 10;
    if(scan_x > halfw) {
        scan_x = -halfw;
    }
@@ -58,6 +58,7 @@ void ofApp::update(){
     for(auto& elc : event_line_columns) {
         elc.update();
     }
+    web_server_vis.update();
     // prepares laser manager to receive new graphics
     laser.update();
 }
@@ -67,8 +68,8 @@ void ofApp::draw(){
 
     ofPushMatrix();
     ofTranslate(halfw, halfh, 0.0);
-    ofRotateRad(rot_x * 0.5, 0.0, 1.0, 0.0);
-    ofRotateRad(rot_y * 0.5, 1.0, 0.0, 0.0);
+    // ofRotateRad(rot_x * 0.5, 0.0, 1.0, 0.0);
+    // ofRotateRad(rot_y * 0.5, 1.0, 0.0, 0.0);
     // Draw using
     // laser.drawLine()
     // laser.drawDot()
@@ -93,22 +94,28 @@ void ofApp::draw(){
     laser.drawDot(triangle_positions[2].x, triangle_positions[2].y, ofColor::green, intensity, OFXLASER_PROFILE_FAST);
 
     // draw point activity
-    for(auto& ap : activity_points) {
-        ap.draw(laser);
-    }
+    // for(auto& ap : activity_points) {
+    //     ap.draw(laser);
+    // }
 
-    for(auto& elc : event_line_columns) {
-        elc.draw(laser, scan_x, scan_width);
-    }
+    // for(auto& elc : event_line_columns) {
+    //     elc.draw(laser, scan_x, scan_width);
+    // }
 
     // Test drawing text
     auto text_options = LaserTextOptions();
+    text_options.size = 100.0;
+    text_options.color = ofColor::red;
     // draw_laser_text(laser, "AXY0123456789", text_options, glm::vec2(width * 0.4 - halfw, height * 0.5 - halfh));
+    draw_laser_text(laser, "57131", text_options, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh));
+    draw_laser_text(laser, "MOVE OPEN FILE", text_options, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh + (text_options.size * 2)));
 
 
     text_options.size = 20.0;
     text_options.color = ofColor::red;
     draw_laser_text(laser, to_string(scan_x), text_options, glm::vec2(scan_x, height * 0.5 - halfh));
+
+    web_server_vis.draw(laser);
 
     auto pt = player_trails.find(current_player_trail_id);
     if(pt != player_trails.end()) {
@@ -122,6 +129,7 @@ void ofApp::draw(){
     // draw the laser UI elements
     laser.drawUI();
 }
+
 
 void ofApp::addRandomActivityPoint() {
 
@@ -218,7 +226,7 @@ void ofApp::checkOscMessages() {
             string origin = m.getArgAsString(0);
             string action = m.getArgAsString(1);
             string arguments = m.getArgAsString(2);
-            cout << "OSC mess: " << origin << ", " << action << ", " << arguments << endl;
+            // cout << "OSC mess: " << origin << ", " << action << ", " << arguments << endl;
             parseOscMessage(origin, action, arguments);
 		}
 		else
@@ -234,6 +242,7 @@ void ofApp::checkOscMessages() {
 void ofApp::parseOscMessage(string origin, string action, string arguments) {
     std::string delimiter = ";";
     if(origin == "node") {
+        web_server_vis.register_node(action);
         if(action == "async after Timeout") {
             addActivityPoint(2);
 
@@ -282,7 +291,9 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
                 auto it = player_trails.find(user_id);
                 if(it == player_trails.end()) {
                     auto pt = PlayerTrail();
-                    pt.move_to_point((x * 100) - halfw, (y * 100) - halfh);
+                    float grid_x = width/25;
+                    float grid_y = height/15;
+                    pt.move_to_point((x * grid_x) - halfw, (y * grid_y) - halfh);
                     player_trails.insert(make_pair<string, PlayerTrail>(move(user_id), move(pt)));
                 } else {
                     it->second.move_to_point((x * 100) - halfw, (y * 100) - halfh);;
@@ -326,7 +337,7 @@ void ofApp::mouseMoved(int x, int y ){
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button){
 
-    addRandomActivityPoint();
+    // addRandomActivityPoint();
 }
 
 //--------------------------------------------------------------

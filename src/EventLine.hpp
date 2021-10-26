@@ -44,7 +44,7 @@ class EventLineColumn {
         glm::vec2 offset;
 
         EventLineColumn(glm::vec2 offset, int width, int height): offset(offset) {
-            const int num_lines = 1000;
+            const int num_lines = 100;
             const float length = 50.0;
             const float margin = 0.1;
             for(int i = 0; i < num_lines; i++) {
