@@ -1,6 +1,6 @@
 {
     "0": {
-        "Brightness": "0.55",
+        "Brightness": "1",
         "Colour_calibration": {
             "blue_0": "0",
             "blue_100": "0.38",
@@ -28,13 +28,13 @@
                 "Sync_to_Target_framerate": "0",
                 "Target_framerate": "26.08"
             },
-            "Colour_shift": "0.04",
+            "Colour_shift": "0",
             "Flip_Horizontal": "1",
             "Flip_Vertical": "0",
             "Output_position_offset": "0, 0",
             "Output_rotation": "0",
             "Points_per_second": "30500",
-            "Speed": "1"
+            "Speed": "1.01"
         },
         "Scanner_settings": {
             "Hold_off_after": "1",

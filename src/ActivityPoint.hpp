@@ -24,7 +24,8 @@ class ActivityPoint {
         }
 
         void draw(ofxLaser::Manager &laser) {
-            laser.drawCircle(position.x, position.y, radius, color, OFXLASER_PROFILE_FAST);
+            // laser.drawCircle(position.x, position.y, radius, color, OFXLASER_PROFILE_FAST);
+            laser.drawDot(position.x, position.y, color, 0.1, OFXLASER_PROFILE_FAST);
         }
 
         void launch_towards(glm::vec2 destination, float speed) {

@@ -11,17 +11,40 @@ void ofApp::setup(){
     laser.setCanvasSize(width, height);
 
     // Set up triangle positions
-    triangle_positions[0] = glm::vec2(width * 0.2 - halfw, height * 0.85 - halfh);
-    triangle_positions[1] = glm::vec2(width * 0.5 - halfw, height * 0.15 - halfh);
-    triangle_positions[2] = glm::vec2(width * 0.8 - halfw, height * 0.85 - halfh);
+    triangle_positions[0] = glm::vec2(width * 0.2 - halfw, height * 0.85 - halfh); // visualisation
+    triangle_positions[1] = glm::vec2(width * 0.5 - halfw, height * 0.15 - halfh); // server
+    triangle_positions[2] = glm::vec2(width * 0.8 - halfw, height * 0.85 - halfh); // user
 
     for(int i = 0; i < 3; i++) {
         event_line_columns.push_back(EventLineColumn(glm::vec2(i*(width/3) - halfw, -halfh), width/3, height));
     }
+
+    auto text_options = LaserTextOptions();
+    text_options.size = 80.0;
+    text_options.color = ofColor::red;
+
+    laser_texts.push_back(LaserText("ABCDEFGHIJKLMNOPQ", text_options, 5, glm::vec2(width * 0.05 - halfw, height * 0.5 - halfh)));
+    laser_texts.push_back(LaserText("RSTUVXY0123456789", text_options, 5, glm::vec2(width * 0.05 - halfw, height * 0.2 - halfh)));
+    // laser_texts.push_back(LaserText("MOVE OPEN FILE", text_options, 4, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh + (text_options.size * 2))));
+   // colors.push_back(ofColor::white);
+   // colors.push_back(ofColor::red);
+   colors.push_back(ofColor::white);
+   // colors.push_back(ofColor::teal);
+   // colors.push_back(ofColor::green);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+
+    static float last_time = 0;
+    if(last_time == 0) {
+        last_time = ofGetElapsedTimef();
+    }
+    float now = ofGetElapsedTimef();
+    float dt = now - last_time;
+    last_time = now;
+
+    transition.update(dt);
 
    checkOscMessages();
 
@@ -34,6 +57,17 @@ void ofApp::update(){
    rot_x = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01) * 2.0 - 1.0;
    rot_y = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01 + 2534.0) * 2.0 - 1.0;
 
+   for(int i = 0; i < ofRandom(0, 2); i++) {
+       raindrops.push_back(RainDrop(width, height, colors[floor(ofRandom(0, colors.size()))]));
+   }
+   for(auto& d : raindrops) {
+       d.update(dt);
+   }
+    for(int i = raindrops.size()-1; i >= 0; i--) {
+        if(raindrops[i].position.y > halfh) {
+            raindrops.erase(raindrops.begin() + i);
+        }
+    }
 
     for(auto& ap : activity_points) {
         ap.update();
@@ -44,6 +78,18 @@ void ofApp::update(){
             activity_points.erase(activity_points.begin() + i);
         }
     }
+
+    for(size_t i = 0; i < 3; i++) {
+        triangle_activity[i] *= 0.95;
+        if(triangle_activity[i] > 1.0) {
+            triangle_activity[i] = 1.0;
+        }
+    }
+
+    for(auto& lt : laser_texts) {
+        lt.update();
+    }
+    text_flow.update(width);
 
     auto pt = player_trails.find(current_player_trail_id);
     if(pt != player_trails.end()) {
@@ -78,59 +124,18 @@ void ofApp::draw(){
     //
     // Translating the coordinate system also works
 
-
-    switch(vis_mode) {
-        case VisMode::WEBSERVER:
-            {
-                web_server_vis.draw(laser);
-            }
-            break;
-        case VisMode::TEXT_DEMO:
-        {
-            auto text_options = LaserTextOptions();
-            text_options.size = 80.0;
-            text_options.color = ofColor::red;
-            draw_laser_text(laser, "AXY0123456789", text_options, glm::vec2(width * 0.4 - halfw, height * 0.5 - halfh));
-            draw_laser_text(laser, "57131", text_options, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh));
-            draw_laser_text(laser, "MOVE OPEN FILE", text_options, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh + (text_options.size * 2)));
-
-
-            text_options.size = 20.0;
-            text_options.color = ofColor::red;
-            // draw_laser_text(laser, to_string(scan_x), text_options, glm::vec2(scan_x, height * 0.5 - halfh));
-        }
-            break;
-        case VisMode::USER:
-        {
-            auto pt = player_trails.find(current_player_trail_id);
-            if(pt != player_trails.end()) {
-                pt->second.draw(laser);
-            }
-        }
-            break;
-        case VisMode::ZOOMED_OUT:
-        {
-            // draw triangle positions
-            // float intensity = ofNoise(ofGetElapsedTimef() * 0.05) * 0.7 + 0.3;
-            // laser.drawDot(triangle_positions[0].x, triangle_positions[0].y, ofColor::green, intensity, OFXLASER_PROFILE_FAST);
-            // laser.drawDot(triangle_positions[1].x, triangle_positions[1].y, ofColor::green, intensity, OFXLASER_PROFILE_FAST);
-            // laser.drawDot(triangle_positions[2].x, triangle_positions[2].y, ofColor::green, intensity, OFXLASER_PROFILE_FAST);
-        }
-            break;
+    if(transition.active()) {
+        ofPushMatrix();
+        transition.applyTransitionFrom();
+        drawVisualisation(transition.from_vis);
+        ofPopMatrix();
+        ofPushMatrix();
+        transition.applyTransitionTo();
+        drawVisualisation(transition.to_vis);
+        ofPopMatrix();
+    } else {
+        drawVisualisation(vis_mode);
     }
-
-    // draw point activity
-    // for(auto& ap : activity_points) {
-    //     ap.draw(laser);
-    // }
-
-    // for(auto& elc : event_line_columns) {
-    //     elc.draw(laser, scan_x, scan_width);
-    // }
-
-    // Test drawing text
-
-
 
 
 
@@ -203,6 +208,7 @@ void ofApp::addActivityPoint(int source) {
     ap.launch_towards(destination, vel_amp);
     ap.grow(ofRandom(0.0, 0.5));
     activity_points.push_back(ap);
+    triangle_activity[source] += 0.1;
 }
 
 void ofApp::pickRandomPlayerTrail() {
@@ -254,19 +260,20 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
     std::string delimiter = ";";
     if(origin == "node") {
         web_server_vis.register_node(action);
+
         if(action == "async after Timeout") {
-            addActivityPoint(2);
+            addActivityPoint(TriangleSERVER);
 
         } else if(action == "async after FSREQCALLBACK") {
-            addActivityPoint(0);
+            addActivityPoint(TriangleSERVER);
 
         } else if(action == "async after TCPWRAP") {
-            addActivityPoint(0);
+            addActivityPoint(TriangleSERVER);
 
         }
     } else if(origin == "gameEngine") {
         if(action == "stateChanged") {
-            addActivityPoint(1);
+            addActivityPoint(TriangleSERVER);
 
         } else if(action == "newQuestion") {
             string question = arguments;
@@ -274,6 +281,9 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
 
     } else if(origin == "user") {
 
+        string text = action; // + " " + arguments;
+        text_flow.add_text(text, laser, width, height);
+        addActivityPoint(TriangleUSER);
         if(action == "move") {
             arguments += ';';
             string user_id = "";
@@ -320,8 +330,73 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
             player_trails.insert(make_pair<string, PlayerTrail>(move(user_id), PlayerTrail()));
         }
     } else if(origin == "server") {
+        web_server_vis.register_server(action);
+        addActivityPoint(TriangleSERVER);
         if(action == "file") {
 
+        }
+    } else if(origin == "mongodb") {
+        web_server_vis.register_mongodb(action);
+    }
+}
+
+
+void ofApp::drawVisualisation(VisMode vis) {
+
+    switch(vis) {
+        case VisMode::WEBSERVER:
+            {
+                web_server_vis.draw(laser);
+            }
+            break;
+        case VisMode::TEXT_DEMO:
+        {
+            // auto text_options = LaserTextOptions();
+            // text_options.size = 80.0;
+            // text_options.color = ofColor::red;
+            // draw_laser_text(laser, "AXY0123456789", text_options, glm::vec2(width * 0.4 - halfw, height * 0.5 - halfh));
+            // draw_laser_text(laser, "57131", text_options, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh));
+            // draw_laser_text(laser, "MOVE OPEN FILE", text_options, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh + (text_options.size * 2)));
+
+            // for(auto& lt : laser_texts) {
+            //     lt.draw(laser);
+            // }
+            text_flow.draw(laser);
+
+        }
+            break;
+        case VisMode::USER:
+        {
+            auto pt = player_trails.find(current_player_trail_id);
+            if(pt != player_trails.end()) {
+                pt->second.draw(laser);
+            }
+        }
+            break;
+        case VisMode::ZOOMED_OUT:
+        {
+            // draw triangle positions
+            float intensity = 0.2;
+            for(size_t i = 0; i < 3; i++) {
+                laser.drawDot(triangle_positions[i].x, triangle_positions[i].y, ofColor::white, intensity, OFXLASER_PROFILE_FAST);
+                float radius = powf(triangle_activity[i], 0.5) * height * 0.08 + 10;
+                laser.drawCircle(triangle_positions[i].x, triangle_positions[i].y, radius, ofColor::white, OFXLASER_PROFILE_FAST);
+            }
+    // for(auto& elc : event_line_columns) {
+    //     elc.draw(laser, scan_x, scan_width);
+    // }
+    // draw point activity
+            for(auto& ap : activity_points) {
+                ap.draw(laser);
+            }
+            break;
+        }
+        case VisMode::RAIN:
+        {
+            for(auto& d : raindrops) {
+                d.draw(laser);
+            }
+            break;
         }
     }
 }
@@ -331,13 +406,62 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
 void ofApp::keyPressed(int key){
     switch(key) {
         case OF_KEY_RIGHT:
+        {
+            auto from = vis_mode;
             vis_mode = static_cast<VisMode>((static_cast<int>(vis_mode)+1)%static_cast<int>(VisMode::LAST));
+            auto to = vis_mode;
+            transitionToFrom(from, to);
+
             break;
+        }
         case OF_KEY_LEFT:
             if(static_cast<int>(vis_mode) != 0) {
+                auto from = vis_mode;
                 vis_mode = static_cast<VisMode>(static_cast<int>(vis_mode)-1);
+                auto to = vis_mode;
+                transitionToFrom(from, to);
             }
             break;
+        case '1':
+        {
+                auto from = vis_mode;
+                vis_mode = static_cast<VisMode>(0);
+                auto to = vis_mode;
+                transitionToFrom(from, to);
+                break;
+        }
+        case '2':
+        {
+                auto from = vis_mode;
+                vis_mode = static_cast<VisMode>(1);
+                auto to = vis_mode;
+                transitionToFrom(from, to);
+                break;
+        }
+        case '3':
+        {
+                auto from = vis_mode;
+                vis_mode = static_cast<VisMode>(2);
+                auto to = vis_mode;
+                transitionToFrom(from, to);
+                break;
+        }
+        case '4':
+        {
+                auto from = vis_mode;
+                vis_mode = static_cast<VisMode>(3);
+                auto to = vis_mode;
+                transitionToFrom(from, to);
+                break;
+        }
+        case '5':
+        {
+                auto from = vis_mode;
+                vis_mode = static_cast<VisMode>(4);
+                auto to = vis_mode;
+                transitionToFrom(from, to);
+                break;
+        }
     }
 }
 
@@ -393,4 +517,42 @@ void ofApp::gotMessage(ofMessage msg){
 //--------------------------------------------------------------
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
 
+}
+
+void ofApp::transitionToFrom(VisMode from, VisMode to) {
+    Transition t = Transition();
+    if (from == VisMode::ZOOMED_OUT) {
+        t.type = TransitionType::ZOOM_IN;
+        switch(to) {
+            case VisMode::WEBSERVER:
+            {
+                t.zoom_target = triangle_positions[TriangleSERVER];
+                t.duration = 4.0;
+                break;
+            }
+            case VisMode::USER:
+            {
+                t.zoom_target = triangle_positions[TriangleUSER];
+                break;
+            }
+        }
+    }
+    if (to == VisMode::ZOOMED_OUT) {
+        t.type = TransitionType::ZOOM_OUT;
+        switch(from) {
+            case VisMode::WEBSERVER:
+            {
+                t.zoom_target = triangle_positions[TriangleSERVER];
+                break;
+            }
+            case VisMode::USER:
+            {
+                t.zoom_target = triangle_positions[TriangleUSER];
+                break;
+            }
+        }
+    }
+    t.from_vis = from;
+    t.to_vis = to;
+    transition = t;
 }

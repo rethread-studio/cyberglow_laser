@@ -1,0 +1,79 @@
+#+TITLE: Cyber Todo
+
+* TODO Etherdream turning off and on again
+#+begin_quote
+[notice ] response : I command : d
+
+protocol           : 0
+light_engine_state : ready 0
+playback_state     : idle 0
+source             : 0
+light_engine_flags : 00000
+playback_flags     : 000
+source_flags       : 0
+buffer_fullness    : 224
+point_rate         : 0
+point_count        : 15743447
+
+[notice ] sendPrepare()
+[notice ] sendBegin()
+
+#+end_quote
+
+Sometimes
+
+* TODO Text
+
+Text is quite hard to read, partly because it is flickering unless very imprecise.
+
+It is easier to read text drawn a few letters at a time.
+
+** DONE Implement functions for drawing a text message over time, a few letters at a time
+
+** DONE All the letters
+
+* TODO Activity points
+
+** TODO Limit number of activity points to improve speed
+If there are too many points already, maybe some points can merge into one bigger point?
+
+** DONE Draw activity points as points
+Drawing points instead of circles is waaaay faster.
+
+* TODO Transitions between states
+
+** TODO Fly into one of the circles of the triangle
+Maybe spin around at the end to reveal like the inside?
+
+Looks good on the laser!! I need to fix the issue with zooming into/out of a specific spot.
+
+** DONE Spin around to switch between states for the same position
+
+* View ideas
+
+** DONE Let scrolling text from events fly across the screen
+
+** TODO More details about the architecture in the zoomed out view
+More details could be optionally drawn on the same view
+- Different connected users (who have made an action in the last n seconds)
+- Different parts of the server structure
+- Different parts that are in the room (laser, DAC, webcams, server, projector)
+
+** NO Rain of ftrace events
+Different colours for different events
+Tested: doesn't work, the laer doesn't have time to draw them and the colours don't work with low intensity dots.
+
+** TODO Stack trace like view?
+
+** TODO Heartbeat monitor for events
+
+** TODO One colour per source of data
+- users
+- server
+- room and OS
+
+** TODO More events in the web server view
+* Knowledge Base
+
+** Dot intensity
+It seems like the maximum dot intensity is approximately 1.0 / (number_of_dots * 4)

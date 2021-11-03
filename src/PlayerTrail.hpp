@@ -14,7 +14,7 @@ inline void draw_player(ofxLaser::Manager &laser, glm::vec2 position, ofColor co
     laser.drawCircle(p, radius, col, profile);
     std::ostringstream os;
     os << "X: " << floor(p.x) << " Y: " << floor(p.y);
-    auto text_options = LaserTextOptions(12.0, color);
+    auto text_options = LaserTextOptions(30.0, color);
     draw_laser_text(laser, os.str(), text_options, p+glm::vec2(radius, -radius));
 }
 
@@ -25,7 +25,7 @@ class PlayerTrail {
         ofColor color = ofColor::green;
         int display_index = 0;
         int index_counter = 0;
-        int frames_between = 5;
+        int frames_between = 15;
         bool finished_cycle = false;
 
         PlayerTrail() {
