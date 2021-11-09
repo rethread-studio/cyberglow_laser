@@ -73,7 +73,7 @@ class WebServerVis {
             }
         }
 
-        void draw(ofxLaser::Manager& laser) {
+        void draw(ofxLaser::Manager& laser, float scale) {
             ofColor col = color;
             ofPolyline poly;
             auto profile = OFXLASER_PROFILE_DEFAULT;
@@ -94,7 +94,7 @@ class WebServerVis {
                 float v1 = activity_smoothed[up_i];
                 float value = v0 + mix * (v1-v0);
                 float angle = (TWO_PI/float(activity.size())) * i;
-                float r = radius * powf(1.0/(value + 1.0), 0.5);
+                float r = radius * powf(1.0/(value + 1.0), 0.5) * scale;
                 // float r = radius - value * 60.0;
                 float x = cos(angle)*r;
                 float y = sin(angle)*r;

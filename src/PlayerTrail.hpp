@@ -57,7 +57,7 @@ class PlayerTrail {
             display_index = 0;
         }
 
-        void draw(ofxLaser::Manager &laser) {
+        void draw(ofxLaser::Manager &laser, float scale) {
             if(!finished_cycle) {
             if(index_counter >= frames_between) {
                 index_counter = 0;
@@ -72,11 +72,11 @@ class PlayerTrail {
             int start = trail_positions.size()-1-max(display_index-int(trail_positions.size()), 0);
             int end = max(int(trail_positions.size())-1-display_index, 0);
             for(int i = start; i>= end; i--) {
-                auto p = trail_positions[i];
+                auto p = trail_positions[i] * scale;
                 draw_player(laser, p, color);
                 auto op = current_position;
                 if(i != 0) {
-                    op = trail_positions[i-1];
+                    op = trail_positions[i-1] * scale;
                 }
                 if(i == 0 || i != end)
                 laser.drawLine(glm::vec2(p.x, p.y), glm::vec2(op.x, op.y), color, profile);

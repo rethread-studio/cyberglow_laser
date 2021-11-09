@@ -19,6 +19,8 @@ void ofApp::setup(){
         event_line_columns.push_back(EventLineColumn(glm::vec2(i*(width/3) - halfw, -halfh), width/3, height));
     }
 
+    user_grid = UserGrid(width, height);
+
     auto text_options = LaserTextOptions();
     text_options.size = 80.0;
     text_options.color = ofColor::red;
@@ -26,11 +28,12 @@ void ofApp::setup(){
     laser_texts.push_back(LaserText("ABCDEFGHIJKLMNOPQ", text_options, 5, glm::vec2(width * 0.05 - halfw, height * 0.5 - halfh)));
     laser_texts.push_back(LaserText("RSTUVXY0123456789", text_options, 5, glm::vec2(width * 0.05 - halfw, height * 0.2 - halfh)));
     // laser_texts.push_back(LaserText("MOVE OPEN FILE", text_options, 4, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh + (text_options.size * 2))));
-   // colors.push_back(ofColor::white);
-   // colors.push_back(ofColor::red);
-   colors.push_back(ofColor::white);
-   // colors.push_back(ofColor::teal);
-   // colors.push_back(ofColor::green);
+
+    laser.armAllLasers();
+    laser.globalBrightness.set(1.0);
+    // for(auto& l : laser.lasers) {
+    //     l->intensity.set(0.5);
+    // }
 }
 
 //--------------------------------------------------------------
@@ -57,18 +60,6 @@ void ofApp::update(){
    rot_x = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01) * 2.0 - 1.0;
    rot_y = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01 + 2534.0) * 2.0 - 1.0;
 
-   for(int i = 0; i < ofRandom(0, 2); i++) {
-       raindrops.push_back(RainDrop(width, height, colors[floor(ofRandom(0, colors.size()))]));
-   }
-   for(auto& d : raindrops) {
-       d.update(dt);
-   }
-    for(int i = raindrops.size()-1; i >= 0; i--) {
-        if(raindrops[i].position.y > halfh) {
-            raindrops.erase(raindrops.begin() + i);
-        }
-    }
-
     for(auto& ap : activity_points) {
         ap.update();
     }
@@ -91,9 +82,10 @@ void ofApp::update(){
     }
     text_flow.update(width);
 
+    user_grid.update(dt);
+
     auto pt = player_trails.find(current_player_trail_id);
     if(pt != player_trails.end()) {
-        pt->second.draw(laser);
         if(pt->second.finished_cycle) {
             pickRandomPlayerTrail();
         }
@@ -126,15 +118,15 @@ void ofApp::draw(){
 
     if(transition.active()) {
         ofPushMatrix();
-        transition.applyTransitionFrom();
-        drawVisualisation(transition.from_vis);
+        float scale = transition.applyTransitionFrom();
+        drawVisualisation(transition.from_vis, scale);
         ofPopMatrix();
         ofPushMatrix();
-        transition.applyTransitionTo();
-        drawVisualisation(transition.to_vis);
+        scale = transition.applyTransitionTo();
+        drawVisualisation(transition.to_vis, scale);
         ofPopMatrix();
     } else {
-        drawVisualisation(vis_mode);
+        drawVisualisation(vis_mode, 1.0);
     }
 
 
@@ -283,6 +275,7 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
 
         string text = action; // + " " + arguments;
         text_flow.add_text(text, laser, width, height);
+        user_grid.register_event(action, arguments);
         addActivityPoint(TriangleUSER);
         if(action == "move") {
             arguments += ';';
@@ -341,12 +334,12 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
 }
 
 
-void ofApp::drawVisualisation(VisMode vis) {
+void ofApp::drawVisualisation(VisMode vis, float scale) {
 
     switch(vis) {
         case VisMode::WEBSERVER:
             {
-                web_server_vis.draw(laser);
+                web_server_vis.draw(laser, scale);
             }
             break;
         case VisMode::TEXT_DEMO:
@@ -369,32 +362,30 @@ void ofApp::drawVisualisation(VisMode vis) {
         {
             auto pt = player_trails.find(current_player_trail_id);
             if(pt != player_trails.end()) {
-                pt->second.draw(laser);
+                pt->second.draw(laser, scale);
             }
         }
+        case VisMode::USER_GRID:
+        {
+
             break;
+        }
         case VisMode::ZOOMED_OUT:
         {
             // draw triangle positions
             float intensity = 0.2;
             for(size_t i = 0; i < 3; i++) {
-                laser.drawDot(triangle_positions[i].x, triangle_positions[i].y, ofColor::white, intensity, OFXLASER_PROFILE_FAST);
+                laser.drawDot(triangle_positions[i].x * scale, triangle_positions[i].y * scale, ofColor::white, intensity, OFXLASER_PROFILE_FAST);
                 float radius = powf(triangle_activity[i], 0.5) * height * 0.08 + 10;
-                laser.drawCircle(triangle_positions[i].x, triangle_positions[i].y, radius, ofColor::white, OFXLASER_PROFILE_FAST);
+                radius = radius * scale; // use sqrt because the radius is used in both directions
+                laser.drawCircle(triangle_positions[i].x * scale, triangle_positions[i].y * scale, radius, ofColor::white, OFXLASER_PROFILE_FAST);
             }
     // for(auto& elc : event_line_columns) {
     //     elc.draw(laser, scan_x, scan_width);
     // }
     // draw point activity
             for(auto& ap : activity_points) {
-                ap.draw(laser);
-            }
-            break;
-        }
-        case VisMode::RAIN:
-        {
-            for(auto& d : raindrops) {
-                d.draw(laser);
+                ap.draw(laser, scale);
             }
             break;
         }

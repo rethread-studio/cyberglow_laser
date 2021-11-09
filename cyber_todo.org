@@ -40,15 +40,20 @@ If there are too many points already, maybe some points can merge into one bigge
 ** DONE Draw activity points as points
 Drawing points instead of circles is waaaay faster.
 
+* User views
+** TODO Fix user move coordinate
+** TODO Show all user events separately
+
 * TODO Transitions between states
 
-** TODO Fly into one of the circles of the triangle
+# ** TODO Fly into one of the circles of the triangle
 Maybe spin around at the end to reveal like the inside?
 
 Looks good on the laser!! I need to fix the issue with zooming into/out of a specific spot.
 
 ** DONE Spin around to switch between states for the same position
 
+* TODO Automatically connect and arm laser on startup
 * View ideas
 
 ** DONE Let scrolling text from events fly across the screen
@@ -67,12 +72,15 @@ Tested: doesn't work, the laer doesn't have time to draw them and the colours do
 
 ** TODO Heartbeat monitor for events
 
+** TODO User view for events per user
+
 ** TODO One colour per source of data
 - users
 - server
 - room and OS
 
 ** TODO More events in the web server view
+
 * Knowledge Base
 
 ** Dot intensity

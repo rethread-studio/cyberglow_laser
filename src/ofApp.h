@@ -16,14 +16,15 @@
 #include "PlayerTrail.hpp"
 #include "WebServerVis.h"
 #include "RainDrop.hpp"
+#include "UserGrid.hpp"
 
 
 enum class VisMode {
 WEBSERVER = 0,
 USER,
+USER_GRID,
 ZOOMED_OUT,
 TEXT_DEMO,
-RAIN,
 LAST,
 };
 
@@ -82,7 +83,7 @@ class Transition {
 
 		}
 
-		void applyTransitionFrom() {
+		float applyTransitionFrom() {
 			switch(type) {
 				case TransitionType::SPIN:
 				{
@@ -91,20 +92,30 @@ class Transition {
 				}
 				case TransitionType::ZOOM_IN:
 				{
-					float target_phase = min(phase * 2.0, 1.0) * -1;
-					ofTranslate(zoom_target.x*target_phase, zoom_target.y*target_phase, zoom_distance * phase);
+					//
+					float scale = 1.0 + powf(max(phase-0.25, 0.0), 2.0) * 300.;
+					float target_phase = min(phase * 4.0, 1.0) * -1 * scale;
+					ofTranslate(zoom_target.x*target_phase, zoom_target.y*target_phase, 0.0);
+					// return scale;
+					ofScale(scale, scale, 0.);
 					break;
 				}
 				case TransitionType::ZOOM_OUT:
 				{
-					float target_phase = min(phase * 2.0, 1.0) * -1;
-					ofTranslate(zoom_target.x*target_phase, zoom_target.y*target_phase, zoom_distance * phase * -1);
+					float target_phase = max(min(phase * 4.0 - 3.0, 1.0), 0.0);
+					float scale = powf(min(max((1.0-phase/0.75), 0.0), 1.0), 3.0);
+					// cout << "target y: " << zoom_target.y * target_phase << endl;
+					// ofTranslate(0., 0., zoom_distance * phase * -1);
+					ofTranslate(zoom_target.x*target_phase, zoom_target.y*target_phase, 0.);
+					ofScale(scale, scale, 0);
 					break;
 				}
 			}
+			return 1.0;
 		}
 
-		void applyTransitionTo() {
+		/// Returns the scale that the visualisation should be drawn with
+		float applyTransitionTo() {
 			switch(type) {
 				case TransitionType::SPIN:
 				{
@@ -113,18 +124,30 @@ class Transition {
 				}
 				case TransitionType::ZOOM_IN:
 				{
-					float target_phase = (1.0 - min(phase * 3.0, 1.0)) * -1;
-					ofTranslate(zoom_target.x*target_phase, zoom_target.y*target_phase, zoom_distance * -4 + (zoom_distance * phase * 4));
+					float target_phase = (1.0 - min(phase * 4.0, 1.0)) * -1;
+					// float z_zoom = zoom_distance * -4 + (zoom_distance * phase * 4);
+					float scale = powf(max(phase-0.25, 0.0)/0.75, 3.0);
+					ofTranslate(zoom_target.x*target_phase*-1, zoom_target.y*target_phase*-1, 0);
+					// ofTranslate(0, 0, z_zoom);
+					// return scale;
+					ofScale(scale, scale, 0);
 
 					break;
 				}
 				case TransitionType::ZOOM_OUT:
 				{
-					float target_phase = (1.0 - min(phase * 3.0, 1.0)) * -1;
-					ofTranslate(zoom_target.x*target_phase, zoom_target.y*target_phase, zoom_distance  - (zoom_distance * phase ));
+					// *-1 because we want to move opposite to the target to put it at the origin
+					float scale = 1.0 + powf(max(1.0 - ((phase/0.75)), 0.0), 2.0) * 100.;
+					float target_phase = (1.0 - max(min(phase * 4.0 - 3.0, 1.0), 0.0)) * -1;
+					target_phase *= scale;
+					// cout << "scale out: " << scale << endl;
+					// ofTranslate(0., 0., zoom_distance  - (zoom_distance * phase ));
+					ofTranslate(zoom_target.x*target_phase, zoom_target.y*target_phase, 0.);
+					ofScale(scale, scale, 0);
 					break;
 				}
 			}
+			return 1.0;
 		}
 
 		bool active() {
@@ -160,11 +183,11 @@ class ofApp : public ofBaseApp{
 		void addActivityPoint(int source);
 
 		void drawTransition(Transition transition_);
-		void drawVisualisation(VisMode vis);
+		void drawVisualisation(VisMode vis, float scale);
 
-                void transitionToFrom(VisMode from, VisMode to);
+		void transitionToFrom(VisMode from, VisMode to);
 
-                VisMode vis_mode = VisMode::WEBSERVER;
+		VisMode vis_mode = VisMode::WEBSERVER;
 		Transition transition;
 
 		ofxLaser::Manager laser;
@@ -174,10 +197,8 @@ class ofApp : public ofBaseApp{
 		vector<EventLineColumn> event_line_columns;
 		unordered_map<string, PlayerTrail> player_trails;
 
-		vector<RainDrop> raindrops;
-		vector<ofColor> colors;
-
 		WebServerVis web_server_vis;
+		UserGrid user_grid;
 		vector<LaserText> laser_texts;
 		TextFlow text_flow;
 		string current_player_trail_id = "";
