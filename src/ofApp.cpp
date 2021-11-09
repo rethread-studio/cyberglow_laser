@@ -367,7 +367,7 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
         }
         case VisMode::USER_GRID:
         {
-
+            user_grid.draw(laser);
             break;
         }
         case VisMode::ZOOMED_OUT:
