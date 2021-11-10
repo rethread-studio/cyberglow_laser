@@ -355,7 +355,6 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
             //     lt.draw(laser);
             // }
             text_flow.draw(laser);
-
         }
             break;
         case VisMode::USER:
@@ -364,6 +363,7 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
             if(pt != player_trails.end()) {
                 pt->second.draw(laser, scale);
             }
+            break;
         }
         case VisMode::USER_GRID:
         {
@@ -526,6 +526,16 @@ void ofApp::transitionToFrom(VisMode from, VisMode to) {
                 t.zoom_target = triangle_positions[TriangleUSER];
                 break;
             }
+            case VisMode::USER_GRID:
+            {
+                t.zoom_target = triangle_positions[TriangleUSER];
+                break;
+            }
+            case VisMode::TEXT_DEMO:
+            {
+                t.zoom_target = triangle_positions[TriangleUSER];
+                break;
+            }
         }
     }
     if (to == VisMode::ZOOMED_OUT) {
@@ -537,6 +547,16 @@ void ofApp::transitionToFrom(VisMode from, VisMode to) {
                 break;
             }
             case VisMode::USER:
+            {
+                t.zoom_target = triangle_positions[TriangleUSER];
+                break;
+            }
+            case VisMode::USER_GRID:
+            {
+                t.zoom_target = triangle_positions[TriangleUSER];
+                break;
+            }
+            case VisMode::TEXT_DEMO:
             {
                 t.zoom_target = triangle_positions[TriangleUSER];
                 break;
