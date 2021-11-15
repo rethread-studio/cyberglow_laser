@@ -17,6 +17,7 @@
 #include "WebServerVis.h"
 #include "RainDrop.hpp"
 #include "UserGrid.hpp"
+#include "FtraceVis.hpp"
 
 
 enum class VisMode {
@@ -25,6 +26,7 @@ USER,
 USER_GRID,
 ZOOMED_OUT,
 TEXT_DEMO,
+FTRACE,
 LAST,
 };
 
@@ -34,6 +36,10 @@ SPIN,
 ZOOM_IN,
 ZOOM_OUT,
 };
+
+const size_t TriangleVIS = 0;
+const size_t TriangleSERVER = 1;
+const size_t TriangleUSER = 2;
 
 class Transition {
 	public:
@@ -131,7 +137,6 @@ class Transition {
 					// ofTranslate(0, 0, z_zoom);
 					// return scale;
 					ofScale(scale, scale, 0);
-
 					break;
 				}
 				case TransitionType::ZOOM_OUT:
@@ -154,10 +159,6 @@ class Transition {
 			return type != TransitionType::NONE;
 		}
 };
-
-const size_t TriangleVIS = 0;
-const size_t TriangleSERVER = 1;
-const size_t TriangleUSER = 2;
 
 class ofApp : public ofBaseApp{
 
@@ -186,6 +187,8 @@ class ofApp : public ofBaseApp{
 		void drawVisualisation(VisMode vis, float scale);
 
 		void transitionToFrom(VisMode from, VisMode to);
+		Transition getTransitionToFrom(VisMode from, VisMode to);
+
 
 		VisMode vis_mode = VisMode::WEBSERVER;
 		Transition transition;
@@ -196,6 +199,7 @@ class ofApp : public ofBaseApp{
 		vector<ActivityPoint> activity_points;
 		vector<EventLineColumn> event_line_columns;
 		unordered_map<string, PlayerTrail> player_trails;
+		FtraceVis ftrace_vis;
 
 		WebServerVis web_server_vis;
 		UserGrid user_grid;
@@ -215,6 +219,11 @@ class ofApp : public ofBaseApp{
 		float noise_counter = 0.0;
 		float rot_y = 0.0;
 		float rot_x = 0.0;
+
+		bool automatic_transitions = false;
+		float next_transition_countdown = 0.0;
+		float time_per_vis = 10.0;
+		vector<Transition> transition_chain;
 
 
 		// **************** OSC ****************

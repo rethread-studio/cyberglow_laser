@@ -21,7 +21,7 @@ class TextFlow {
         void add_text(string text, ofxLaser::Manager &laser, int width, int height) {
             transform(text.begin(), text.end(), text.begin(), ::toupper);
             float y = floor(ofRandom(0, (height / (options.size * 2)) -1)) * options.size * 2.0;
-            LaserText lt = LaserText(text, options, 4, glm::vec2(0, y));
+            LaserText lt = LaserText(text, options, 4, glm::vec2(0, y - (height/2)));
             float text_width = lt.get_width(laser);
             // Start to the left of the canvas
             lt.pos.x = width/-2 - text_width;

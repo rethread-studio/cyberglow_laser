@@ -1,6 +1,6 @@
 #+TITLE: Cyber Todo
 
-* TODO Etherdream turning off and on again
+* STRT Etherdream turning off and on again
 #+begin_quote
 [notice ] response : I command : d
 
@@ -22,6 +22,8 @@ point_count        : 15743447
 
 Sometimes
 
+** Try changing cables and network equipment to see if that's the issue
+
 * TODO Text
 
 Text is quite hard to read, partly because it is flickering unless very imprecise.
@@ -42,7 +44,11 @@ Drawing points instead of circles is waaaay faster.
 
 * User views
 ** TODO Fix user move coordinate
-** TODO Show all user events separately
+** DONE Show all user events separately
+
+* Ftrace visualisations
+
+** STRT Many very short dots, one long dot in the middle
 
 * TODO Transitions between states
 
@@ -53,7 +59,13 @@ Looks good on the laser!! I need to fix the issue with zooming into/out of a spe
 
 ** DONE Spin around to switch between states for the same position
 
+** TODO Automatic transitions
+
 * TODO Automatically connect and arm laser on startup
+
+** TODO Find Etherdream automatically
+This is the only part left, try it with the box.
+
 * View ideas
 
 ** DONE Let scrolling text from events fly across the screen
@@ -72,7 +84,7 @@ Tested: doesn't work, the laer doesn't have time to draw them and the colours do
 
 ** TODO Heartbeat monitor for events
 
-** TODO User view for events per user
+** DONE User view for events per user
 
 ** TODO One colour per source of data
 - users

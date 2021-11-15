@@ -47,18 +47,30 @@ void ofApp::update(){
     float dt = now - last_time;
     last_time = now;
 
+    if(automatic_transitions) {
+        next_transition_countdown -= dt;
+        if(next_transition_countdown <= 0.0) {
+            VisMode next_vis;
+            do {
+                int next_vis_num = int(ofRandom(0, static_cast<int>(VisMode::LAST)));
+                next_vis = static_cast<VisMode>(next_vis_num);
+            } while(next_vis == vis_mode);
+            transitionToFrom(vis_mode, next_vis);
+            next_transition_countdown = time_per_vis;
+        }
+    }
     transition.update(dt);
 
-   checkOscMessages();
+    checkOscMessages();
 
-   scan_x += 10;
-   if(scan_x > halfw) {
-       scan_x = -halfw;
-   }
+    scan_x += 10;
+    if(scan_x > halfw) {
+        scan_x = -halfw;
+    }
 
-   noise_counter += 0.001;
-   rot_x = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01) * 2.0 - 1.0;
-   rot_y = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01 + 2534.0) * 2.0 - 1.0;
+    noise_counter += 0.001;
+    rot_x = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01) * 2.0 - 1.0;
+    rot_y = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01 + 2534.0) * 2.0 - 1.0;
 
     for(auto& ap : activity_points) {
         ap.update();
@@ -81,7 +93,7 @@ void ofApp::update(){
         lt.update();
     }
     text_flow.update(width);
-
+    ftrace_vis.update(dt);
     user_grid.update(dt);
 
     auto pt = player_trails.find(current_player_trail_id);
@@ -118,15 +130,31 @@ void ofApp::draw(){
 
     if(transition.active()) {
         ofPushMatrix();
-        float scale = transition.applyTransitionFrom();
-        drawVisualisation(transition.from_vis, scale);
+        transition.applyTransitionFrom();
+        drawVisualisation(transition.from_vis, 1.0);
         ofPopMatrix();
         ofPushMatrix();
-        scale = transition.applyTransitionTo();
-        drawVisualisation(transition.to_vis, scale);
+        transition.applyTransitionTo();
+        drawVisualisation(transition.to_vis, 1.0);
         ofPopMatrix();
     } else {
-        drawVisualisation(vis_mode, 1.0);
+        if(transition_chain.size() > 0) {
+            // pick the next transition from the chain
+            transition = transition_chain[0];
+            vis_mode = transition.to_vis;
+            transition_chain.erase(transition_chain.begin());
+            // draw
+            ofPushMatrix();
+            float scale = transition.applyTransitionFrom();
+            drawVisualisation(transition.from_vis, scale);
+            ofPopMatrix();
+            ofPushMatrix();
+            scale = transition.applyTransitionTo();
+            drawVisualisation(transition.to_vis, scale);
+            ofPopMatrix();
+        } else {
+            drawVisualisation(vis_mode, 1.0);
+        }
     }
 
 
@@ -238,6 +266,10 @@ void ofApp::checkOscMessages() {
             // cout << "OSC mess: " << origin << ", " << action << ", " << arguments << endl;
             parseOscMessage(origin, action, arguments);
 		}
+        else if(m.getAddress() == "/ftrace") {
+            ftrace_vis.register_event(m.getArgAsString(0));
+            // cout << "ftrace: " << m.getArgAsString(0) << endl;
+        }
 		else
 		{
             // cout << "Received unknown message to " << m.getAddress() << endl;
@@ -370,6 +402,11 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
             user_grid.draw(laser);
             break;
         }
+        case VisMode::FTRACE:
+        {
+            ftrace_vis.draw(laser);
+            break;
+        }
         case VisMode::ZOOMED_OUT:
         {
             // draw triangle positions
@@ -453,6 +490,14 @@ void ofApp::keyPressed(int key){
                 transitionToFrom(from, to);
                 break;
         }
+        case '6':
+        {
+                auto from = vis_mode;
+                vis_mode = static_cast<VisMode>(5);
+                auto to = vis_mode;
+                transitionToFrom(from, to);
+                break;
+        }
     }
 }
 
@@ -510,7 +555,38 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 
 }
 
+int visModeCategory(VisMode vis) {
+	if(vis == VisMode::WEBSERVER) {
+		return TriangleSERVER;
+	} else if(vis == VisMode::USER
+			  || vis == VisMode::USER_GRID
+			  || vis == VisMode::TEXT_DEMO) {
+		return TriangleUSER;
+	} else if(vis == VisMode::FTRACE) {
+		return TriangleVIS;
+	} else if(vis == VisMode::ZOOMED_OUT) {
+		return 3;
+	}
+	return -1;
+}
+
+bool vismodesAreInTheSamePlace(VisMode vis1, VisMode vis2) {
+	return visModeCategory(vis1) == visModeCategory(vis2);
+}
+
 void ofApp::transitionToFrom(VisMode from, VisMode to) {
+    vis_mode = to; // the vis_mode should now be the new target mode
+    if(to == VisMode::ZOOMED_OUT || from == VisMode::ZOOMED_OUT || vismodesAreInTheSamePlace(from, to)) {
+        Transition t = getTransitionToFrom(from, to);
+        transition = t;
+    } else {
+        Transition t = getTransitionToFrom(from, VisMode::ZOOMED_OUT);
+        transition = t;
+        transition_chain.push_back(getTransitionToFrom(VisMode::ZOOMED_OUT, to));
+    }
+}
+
+Transition ofApp::getTransitionToFrom(VisMode from, VisMode to) {
     Transition t = Transition();
     if (from == VisMode::ZOOMED_OUT) {
         t.type = TransitionType::ZOOM_IN;
@@ -534,6 +610,11 @@ void ofApp::transitionToFrom(VisMode from, VisMode to) {
             case VisMode::TEXT_DEMO:
             {
                 t.zoom_target = triangle_positions[TriangleUSER];
+                break;
+            }
+            case VisMode::FTRACE:
+            {
+                t.zoom_target = triangle_positions[TriangleVIS];
                 break;
             }
         }
@@ -561,9 +642,14 @@ void ofApp::transitionToFrom(VisMode from, VisMode to) {
                 t.zoom_target = triangle_positions[TriangleUSER];
                 break;
             }
+            case VisMode::FTRACE:
+            {
+                t.zoom_target = triangle_positions[TriangleVIS];
+                break;
+            }
         }
     }
     t.from_vis = from;
     t.to_vis = to;
-    transition = t;
+    return t;
 }

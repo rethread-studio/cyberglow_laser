@@ -85,10 +85,10 @@ class UserData {
         }
 
         void draw(ofxLaser::Manager &laser, float w, float h) {
-                ofColor color = ofColor::pink;
-                float y_up = h/(float(events_y));
-            laser.drawLine(glm::vec2(position.x, position.y - y_up), glm::vec2(position.x+w, position.y-y_up), color, OFXLASER_PROFILE_FAST);
-            laser.drawLine(glm::vec2(position.x+w, position.y-y_up), glm::vec2(position.x+w, position.y+h), color, OFXLASER_PROFILE_FAST);
+            // ofColor color = ofColor::pink;
+            // float y_up = h/(float(events_y));
+            // laser.drawLine(glm::vec2(position.x, position.y - y_up), glm::vec2(position.x+w, position.y-y_up), color, OFXLASER_PROFILE_FAST);
+            // laser.drawLine(glm::vec2(position.x+w, position.y-y_up), glm::vec2(position.x+w, position.y+h), color, OFXLASER_PROFILE_FAST);
             // grid or circle?
             for( auto& ep : events ) {
                 int event_index = static_cast<int>(ep.second);
