@@ -24,7 +24,7 @@ Sometimes
 
 ** Try changing cables and network equipment to see if that's the issue
 
-* TODO Text
+* DONE Text
 
 Text is quite hard to read, partly because it is flickering unless very imprecise.
 
@@ -48,7 +48,17 @@ Drawing points instead of circles is waaaay faster.
 
 * Ftrace visualisations
 
-** STRT Many very short dots, one long dot in the middle
+** DONE Many very short dots, one long dot in the middle
+
+** TODO Colour code error codes
+
+** TODO Something rising from the bottom up
+System calls
+Some analysis (process? type?)
+
+** TODO Walk across the screen
+Similar types of events start close to each other
+small subset of types
 
 * TODO Transitions between states
 
@@ -59,7 +69,7 @@ Looks good on the laser!! I need to fix the issue with zooming into/out of a spe
 
 ** DONE Spin around to switch between states for the same position
 
-** TODO Automatic transitions
+** DONE Automatic transitions
 
 * TODO Automatically connect and arm laser on startup
 
@@ -91,7 +101,12 @@ Tested: doesn't work, the laer doesn't have time to draw them and the colours do
 - server
 - room and OS
 
-** TODO More events in the web server view
+** DONE More events in the web server view
+
+** TODO Server lines
+- full line turning on per event, or
+- a dot running horizontally
+
 
 * Knowledge Base
 

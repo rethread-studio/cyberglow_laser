@@ -100,7 +100,7 @@ class UserData {
                 const float intensity = 0.1;
                 #endif
                 ofColor color = ofColor::red;
-                laser.drawDot(x, y , color, intensity, OFXLASER_PROFILE_FAST);
+                laser.drawDot(x, y , color, intensity, OFXLASER_PROFILE_DEFAULT);
             }
         }
 };

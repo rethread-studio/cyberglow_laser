@@ -11,15 +11,17 @@ void ofApp::setup(){
     laser.setCanvasSize(width, height);
 
     // Set up triangle positions
-    triangle_positions[0] = glm::vec2(width * 0.2 - halfw, height * 0.85 - halfh); // visualisation
+    triangle_positions[0] = glm::vec2(width * 0.3 - halfw, height * 0.85 - halfh); // visualisation
     triangle_positions[1] = glm::vec2(width * 0.5 - halfw, height * 0.15 - halfh); // server
-    triangle_positions[2] = glm::vec2(width * 0.8 - halfw, height * 0.85 - halfh); // user
+    triangle_positions[2] = glm::vec2(width * 0.7 - halfw, height * 0.85 - halfh); // user
 
     for(int i = 0; i < 3; i++) {
         event_line_columns.push_back(EventLineColumn(glm::vec2(i*(width/3) - halfw, -halfh), width/3, height));
     }
 
     user_grid = UserGrid(width, height);
+    overview = Overview(triangle_positions);
+    transition.type = TransitionType::NONE; // disable the transition at startup
 
     auto text_options = LaserTextOptions();
     text_options.size = 80.0;
@@ -60,6 +62,12 @@ void ofApp::update(){
         }
     }
     transition.update(dt);
+
+    // For some visualisations, transition to self automatically
+    if(!transition.active() && transition_chain.size() == 0 &&
+       (vis_mode == VisMode::FTRACE )) {
+        transitionToFrom(vis_mode, vis_mode);
+    }
 
     checkOscMessages();
 
@@ -342,7 +350,7 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
                     pt.move_to_point((x * grid_x) - halfw, (y * grid_y) - halfh);
                     player_trails.insert(make_pair<string, PlayerTrail>(move(user_id), move(pt)));
                 } else {
-                    it->second.move_to_point((x * 100) - halfw, (y * 100) - halfh);;
+                    it->second.move_to_point((x * 100) - halfw, (y * 100) - halfh);
                 }
             }
 
@@ -371,7 +379,7 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
     switch(vis) {
         case VisMode::WEBSERVER:
             {
-                web_server_vis.draw(laser, scale);
+                web_server_vis.draw(laser, width, height);
             }
             break;
         case VisMode::TEXT_DEMO:
@@ -412,15 +420,17 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
             // draw triangle positions
             float intensity = 0.2;
             for(size_t i = 0; i < 3; i++) {
-                laser.drawDot(triangle_positions[i].x * scale, triangle_positions[i].y * scale, ofColor::white, intensity, OFXLASER_PROFILE_FAST);
+                laser.drawDot(triangle_positions[i].x * scale, triangle_positions[i].y * scale, ofColor::blue, intensity, OFXLASER_PROFILE_FAST);
                 float radius = powf(triangle_activity[i], 0.5) * height * 0.08 + 10;
                 radius = radius * scale; // use sqrt because the radius is used in both directions
-                laser.drawCircle(triangle_positions[i].x * scale, triangle_positions[i].y * scale, radius, ofColor::white, OFXLASER_PROFILE_FAST);
+                laser.drawCircle(triangle_positions[i].x * scale, triangle_positions[i].y * scale, radius, ofColor::blue, OFXLASER_PROFILE_FAST);
             }
-    // for(auto& elc : event_line_columns) {
-    //     elc.draw(laser, scan_x, scan_width);
-    // }
-    // draw point activity
+            // for(auto& elc : event_line_columns) {
+            //     elc.draw(laser, scan_x, scan_width);
+            // }
+            // overview.draw_symbols(laser);
+            overview.draw_text(laser);
+            // draw point activity
             for(auto& ap : activity_points) {
                 ap.draw(laser, scale);
             }
@@ -594,7 +604,6 @@ Transition ofApp::getTransitionToFrom(VisMode from, VisMode to) {
             case VisMode::WEBSERVER:
             {
                 t.zoom_target = triangle_positions[TriangleSERVER];
-                t.duration = 4.0;
                 break;
             }
             case VisMode::USER:

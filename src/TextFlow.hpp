@@ -9,7 +9,7 @@ class TextFlow {
     public:
         vector<LaserText> texts;
         LaserTextOptions options;
-        float velocity = 6.0;
+        float velocity = 10.0;
 
 
         TextFlow() {

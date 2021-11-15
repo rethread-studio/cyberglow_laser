@@ -6,6 +6,7 @@
 
 
 #include "ofMain.h"
+#include "constants.h"
 #include <unordered_map>
 #include "ofxOsc.h"
 #include "ofxLaserManager.h"
@@ -18,6 +19,7 @@
 #include "RainDrop.hpp"
 #include "UserGrid.hpp"
 #include "FtraceVis.hpp"
+#include "Overview.hpp"
 
 
 enum class VisMode {
@@ -37,9 +39,6 @@ ZOOM_IN,
 ZOOM_OUT,
 };
 
-const size_t TriangleVIS = 0;
-const size_t TriangleSERVER = 1;
-const size_t TriangleUSER = 2;
 
 class Transition {
 	public:
@@ -47,7 +46,7 @@ class Transition {
 		VisMode from_vis;
 		VisMode to_vis;
 		float phase = 0.0;
-		float duration = 2.0;
+		float duration = 10.0; // set in constructor
 		glm::vec3 spin_axis = glm::vec3(0, 0, 1.0);
 		float spin_radians = 0.0;
 		glm::vec2 zoom_target = glm::vec2(0, 0);
@@ -59,7 +58,7 @@ class Transition {
 			to_vis = VisMode::WEBSERVER;
 			spin_axis= glm::vec3(0, 1.0, 0);
 			phase = 0.0;
-			duration = 2.0;
+			duration = 5.0;
 		}
 
 
@@ -200,6 +199,7 @@ class ofApp : public ofBaseApp{
 		vector<EventLineColumn> event_line_columns;
 		unordered_map<string, PlayerTrail> player_trails;
 		FtraceVis ftrace_vis;
+		Overview overview;
 
 		WebServerVis web_server_vis;
 		UserGrid user_grid;
@@ -222,7 +222,7 @@ class ofApp : public ofBaseApp{
 
 		bool automatic_transitions = false;
 		float next_transition_countdown = 0.0;
-		float time_per_vis = 10.0;
+		float time_per_vis = 45.0;
 		vector<Transition> transition_chain;
 
 

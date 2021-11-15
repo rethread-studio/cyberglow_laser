@@ -4,16 +4,25 @@
 #include "ofMain.h"
 #include "ofxLaserManager.h"
 
+enum class WebServerVisMode {
+CIRCLE,
+LINES,
+LINES_ONOFF,
+DOT,
+};
 
 class WebServerVis {
     public:
     static std::unordered_map<std::string, size_t> node_action_map;
 
+        WebServerVisMode vis_mode = WebServerVisMode::DOT;
         vector<float> activity;
         vector<float> activity_smoothed;
         vector<int> activity_received; // tracks the number of frames since activity was received
+        vector<vector<int>> activity_received_dots; // tracks the number of frames since activity was received
         float radius = 400.0;
         ofColor color = ofColor::green;
+        int dot_frames_to_cross = 30;
 
         WebServerVis() {
             // init
@@ -25,6 +34,7 @@ class WebServerVis {
             activity = vector<float>(17, 0.0);
             activity_smoothed = vector<float>(17, 0.0);
             activity_received = vector<int>(17, 0.0);
+            activity_received_dots = vector<vector<int>>(17, vector<int>());
         }
 
         void register_node(string action) {
@@ -58,6 +68,7 @@ class WebServerVis {
         void register_activity(size_t index) {
                 activity[index]+= 1.0;
                 activity_received[index] = 10;
+                activity_received_dots[index].push_back(0);
         }
 
         void update() {
@@ -71,12 +82,23 @@ class WebServerVis {
             for(auto& activity : activity_received) {
                 activity -= 1;
             }
+            for(auto& event : activity_received_dots) {
+                for(int i = event.size()-1; i >= 0; i--) {
+                    ++event[i];
+                    if(event[i] > dot_frames_to_cross) {
+                        event.erase(event.begin() + i);
+                    }
+                }
+            }
         }
 
-        void draw(ofxLaser::Manager& laser, float scale) {
+        void draw(ofxLaser::Manager& laser, int width, int height) {
             ofColor col = color;
             ofPolyline poly;
             auto profile = OFXLASER_PROFILE_DEFAULT;
+            switch(vis_mode) {
+                case WebServerVisMode::CIRCLE:
+                {
             float oversampling = 4;
             #ifdef DEBUG_MODE
             float dot_intensity = 1.0; // So we can see the dots on the screen
@@ -94,7 +116,7 @@ class WebServerVis {
                 float v1 = activity_smoothed[up_i];
                 float value = v0 + mix * (v1-v0);
                 float angle = (TWO_PI/float(activity.size())) * i;
-                float r = radius * powf(1.0/(value + 1.0), 0.5) * scale;
+                float r = radius * powf(1.0/(value + 1.0), 0.5);
                 // float r = radius - value * 60.0;
                 float x = cos(angle)*r;
                 float y = sin(angle)*r;
@@ -117,6 +139,55 @@ class WebServerVis {
                 }
             }
             laser.drawPoly(poly, col, profile);
+                    break;
+                }
+                case WebServerVisMode::LINES:
+                {
+                    float line_height = float(height)/float(activity.size());
+                    for(int i = 0; i < activity.size(); ++i) {
+                        if(activity_smoothed[i] > 0.01) {
+
+                            float y = line_height * i + line_height*0.5 - height*0.5;
+                            float length = min(activity_smoothed[i], 1.0f) * float(width);
+                            float x = length - width*0.5;
+                            laser.drawLine(width*-0.5, y, x, y, col, profile);
+                        }
+                    }
+                    break;
+                }
+                case WebServerVisMode::LINES_ONOFF:
+                {
+                    float line_height = float(height)/float(activity.size());
+                    for(int i = 0; i < activity.size(); ++i) {
+                        if(activity_received[i] > 0) {
+
+                            float y = line_height * i + line_height*0.5 - height*0.5;
+                            float x = width*0.5;
+                            laser.drawLine(width*-0.5, y, x, y, col, profile);
+                        }
+                    }
+                    break;
+                }
+                case WebServerVisMode::DOT:
+                {
+                    float line_height = float(height)/float(activity.size());
+                    float distance_per_frame = float(width)/float(dot_frames_to_cross);
+            #ifdef DEBUG_MODE
+            float dot_intensity = 1.0; // So we can see the dots on the screen
+            #else
+            float dot_intensity = 1.0 / float(activity.size());
+            #endif
+                    for(int i = 0; i < activity_received_dots.size(); ++i) {
+                        auto& event = activity_received_dots[i];
+                        float y = line_height * i + line_height*0.5 - height*0.5;
+                        for(int k = event.size()-1; k >= 0; k--) {
+                            float x = distance_per_frame * float(event[k]);
+                            laser.drawDot(x - width*0.5, y, col, dot_intensity, profile);
+                        }
+                    }
+                    break;
+                }
+            }
         }
 };
 #endif

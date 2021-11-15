@@ -26,22 +26,22 @@
                 "Smooth_home_position": "1",
                 "Sync_shift": "0",
                 "Sync_to_Target_framerate": "0",
-                "Target_framerate": "26.08"
+                "Target_framerate": "23"
             },
             "Colour_shift": "0",
             "Flip_Horizontal": "1",
             "Flip_Vertical": "0",
             "Output_position_offset": "0, 0",
             "Output_rotation": "0",
-            "Points_per_second": "30500",
-            "Speed": "1.01"
+            "Points_per_second": "29200",
+            "Speed": "0.83"
         },
         "Scanner_settings": {
             "Hold_off_after": "1",
             "Hold_off_before": "1",
             "Hold_on_after": "0",
             "Hold_on_before": "0",
-            "Move_Speed": "4",
+            "Move_Speed": "4.3",
             "Render_profiles": {
                 "Default": {
                     "acceleration": "0.5",
@@ -58,12 +58,12 @@
                 "High_detail": {
                     "acceleration": "0.75",
                     "corner_threshold": "15",
-                    "dot_max_points": "20",
-                    "speed": "2.5"
+                    "dot_max_points": "14",
+                    "speed": "1.8"
                 }
             },
             "description": "",
-            "label": "Default"
+            "label": "laserimage1"
         },
         "dacId": "Etherdream 66E6349EFA66"
     },

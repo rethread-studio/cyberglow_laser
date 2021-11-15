@@ -9,9 +9,9 @@ class EventStats {
         int num_occurrences = 0;
         float time_since_trigger = 0.0;
         float time_since_last_event = 0.0;
-        int occurrencies_to_trigger = 50;
+        int occurrencies_to_trigger = 100;
         int triggers_without_release = 0;
-        float dot_on_time = 0.45;
+        float dot_on_time = 0.05;
         int event_num = 0;
 
         EventStats(int event_num): event_num(event_num) {}
@@ -44,13 +44,13 @@ class EventStats {
                 float radius = 100.0 + (event_num % 16) * 23.5;
                 float x = cos(angle) * radius;
                 float y = sin(angle) * radius;
-                const ofColor color = ofColor::blue;
+                const ofColor color = ofColor::white;
 #ifdef DEBUG_MODE
                 const float intensity = 1.;
 #else
                 const float intensity = 0.1;
 #endif
-                laser.drawDot(x, y, color, intensity, OFXLASER_PROFILE_FAST);
+                laser.drawDot(x, y, color, intensity, OFXLASER_PROFILE_DEFAULT);
             }
         }
 };
@@ -99,7 +99,7 @@ class FtraceVis {
         }
 
         void draw(ofxLaser::Manager &laser) {
-                laser.drawDot(0, 0 , color, 0.5, OFXLASER_PROFILE_FAST);
+                // laser.drawDot(0, 0 , color, 0.5, OFXLASER_PROFILE_FAST);
                 for(auto& es: event_stats) {
                     es.second.draw(laser);
                 }
