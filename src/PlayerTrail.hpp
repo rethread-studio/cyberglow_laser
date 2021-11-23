@@ -27,6 +27,7 @@ class PlayerTrail {
         int index_counter = 0;
         int frames_between = 15;
         bool finished_cycle = false;
+        bool first_pos_added = false;
 
         PlayerTrail() {
             current_position = glm::vec2(0.0, 0.0);
@@ -37,12 +38,13 @@ class PlayerTrail {
 
         void move_to_point(int x, int y) {
             // Don't store the default starting position
-            if(trail_positions.size() > 0) {
-                trail_positions.push_back(current_position);
+            if(first_pos_added) {
+                trail_positions.insert(trail_positions.begin(), current_position);
             }
+            first_pos_added = true;
             current_position = glm::vec2(x, y);
             while(trail_positions.size() > 3) {
-                trail_positions.erase(trail_positions.begin());
+                trail_positions.erase(trail_positions.begin() + 3);
             }
         }
 
@@ -62,31 +64,38 @@ class PlayerTrail {
 
         void draw(ofxLaser::Manager &laser, float scale) {
             if(!finished_cycle) {
-            if(index_counter >= frames_between) {
-                index_counter = 0;
-                display_index += 1;
-                if(display_index > trail_positions.size()*2) {
-                    display_index = 0;
-                    finished_cycle = true;
+                if(index_counter >= frames_between) {
+                    index_counter = 0;
+                    display_index += 1;
+                    if(display_index > trail_positions.size()*2) {
+                        display_index = 0;
+                        finished_cycle = true;
+                    }
                 }
-            }
-            index_counter++;
-            auto profile = OFXLASER_PROFILE_FAST;
-            int start = trail_positions.size()-1-max(display_index-int(trail_positions.size()), 0);
-            int end = max(int(trail_positions.size())-1-display_index, 0);
-            for(int i = start; i>= end; i--) {
-                auto p = trail_positions[i] * scale;
-                draw_player(laser, p, color);
-                auto op = current_position;
-                if(i != 0) {
-                    op = trail_positions[i-1] * scale;
+                index_counter++;
+                auto profile = OFXLASER_PROFILE_FAST;
+                // 3 - 1 - 0; 2 2 2 1 0
+                int start = trail_positions.size()-1-max(display_index-int(trail_positions.size()), 0);
+                // 3 - 1 - 0; 2 1 0 0 0
+                int end = max(int(trail_positions.size())-1-display_index, 0);
+                for(int i = start; i>= end; i--) {
+                    auto p = trail_positions[i];
+                    draw_player(laser, p, color);
+                    auto op = current_position;
+                    if(i != 0) {
+                        op = trail_positions[i-1] ;
+                    }
+                    if(i != end)
+                        laser.drawLine(glm::vec2(p.x, p.y), glm::vec2(op.x, op.y), color, profile);
                 }
-                if(i == 0 || i != end)
-                laser.drawLine(glm::vec2(p.x, p.y), glm::vec2(op.x, op.y), color, profile);
-            }
-            if(display_index >= trail_positions.size()) {
-                draw_player(laser, current_position, color);
-            }
+                if(display_index >= trail_positions.size() && trail_positions.size() > 0) {
+                    if(display_index != trail_positions.size()*2) {
+                        auto p = trail_positions[0];
+                        auto op = current_position;
+                        laser.drawLine(glm::vec2(p.x, p.y), glm::vec2(op.x, op.y), color, profile);
+                    }
+                    draw_player(laser, current_position, color);
+                }
             }
         }
 };

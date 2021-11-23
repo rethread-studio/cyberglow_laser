@@ -11,6 +11,8 @@ class EventStats {
         float time_since_last_event = 0.0;
         int occurrencies_to_trigger = 100;
         int triggers_without_release = 0;
+        int max_triggers_without_release = 20;
+        float ratio_to_trigger_without_release = 1.0;
         float dot_on_time = 0.05;
         int event_num = 0;
         ofColor color = ofColor::white;
@@ -26,9 +28,9 @@ class EventStats {
             time_since_trigger += dt;
             if(num_occurrences >= occurrencies_to_trigger) {
                 num_occurrences = 0;
-                if(time_since_trigger < dot_on_time) {
+                if(time_since_trigger < (dot_on_time * ratio_to_trigger_without_release)) {
                     triggers_without_release += 1;
-                    if(triggers_without_release > 20) {
+                    if(triggers_without_release > max_triggers_without_release) {
                         occurrencies_to_trigger += 10;
                     }
                 } else {
@@ -61,7 +63,7 @@ class EventStats {
 #ifdef DEBUG_MODE
                 const float intensity = 1.;
 #else
-                const float intensity = 0.1;
+                const float intensity = 0.01;
 #endif
                 laser.drawDot(x - width/2, y-height/2, color, intensity, OFXLASER_PROFILE_DEFAULT);
             }
@@ -90,6 +92,7 @@ class FtraceVis {
         void register_event(string event) {
             // process;timestamp;event;pid?;cpu?
             // event type until ' ' or '()'
+            string event_copy = event;
             vector<string> tokens;
             string delimiter = ";";
             auto i = event.find(delimiter);
@@ -113,7 +116,34 @@ class FtraceVis {
             if(es != event_stats.end()) {
                 es->second.register_event();
             } else {
+                // cout << "ftrace type: \"" << event_type << "\" event: " << event_copy << endl;
                 EventStats e = EventStats(event_stats.size());
+                    string event_prefix;
+                    i = event_type.find("_");
+                    if(i != string::npos) {
+                        event_prefix = event_type.substr(0, i);
+                    }
+                    // Set color of event based on its type
+                    if(event_prefix == "random" || event_prefix == "dd" || event_prefix == "redit") {
+                        // random type
+                        e.color = ofColor::red;
+                    } else if(event_prefix == "ys") {
+                        // syscall type
+                        e.color = ofColor::white;
+                    } else if(event_prefix == "cp") {
+                        // tcp type
+                        e.color = ofColor::green;
+                    } else if(event_prefix == "ix") {
+                        // irq_matrix type
+                        e.color = ofColor::blue;
+                    } else {
+                        e.color = ofColor(255, 0, 255);
+                    }
+                if(rising) {
+                    e.occurrencies_to_trigger = 20;
+                    e.max_triggers_without_release = 2;
+                    e.ratio_to_trigger_without_release = 3.0;
+                }
                 e.dot_on_time = dot_on_time;
                 event_stats.insert({event_type, e});
             }

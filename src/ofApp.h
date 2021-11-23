@@ -1,7 +1,7 @@
 #pragma once
 
 // Flag for seeing everything on the computer screen
-#define DEBUG_MODE true
+#define DEBUG_MODE false
 
 
 
@@ -59,7 +59,7 @@ class Transition {
 			to_vis = VisMode::WEBSERVER;
 			spin_axis= glm::vec3(0, 1.0, 0);
 			phase = 0.0;
-			duration = 5.0;
+			duration = 1.0;
 		}
 
 
@@ -239,7 +239,7 @@ class ofApp : public ofBaseApp{
 
 		// **************** OSC ****************
 		ofxOscReceiver receiver;
-		int PORT = 57131;
+		int PORT = 57130;
 		void checkOscMessages();
 		void parseOscMessage(string origin, string action, string arguments);
 };

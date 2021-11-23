@@ -64,6 +64,7 @@ void ofApp::update(){
     // Get the specific ofxLaser object that we are using
     ofxLaser::Laser& specific_laser = laser.getLaser(0);
     if(!specific_laser.hasDac()) {
+        cout << "No DAC assigned, looking for new DACs" << endl;
         laser.dacAssigner.updateDacList(); // Eventually this connects to the Etherdream. How to test when it has?
     }
     static float last_time = 0;
@@ -310,21 +311,22 @@ void ofApp::checkOscMessages() {
 		}
         else if(m.getAddress() == "/ftrace") {
             ftrace_vis.register_event(m.getArgAsString(0));
+            ftrace_rising_vis.register_event(m.getArgAsString(0));
             // cout << "ftrace: " << m.getArgAsString(0) << endl;
         }
 
         else if(m.getAddress() == "/idle") {
-            cout << "/idle: " << m.getArgAsString(0) << endl;
-            auto arg = m.getArgAsString(0);
-            if(arg == "on") {
-                idle_mode_on = true;
-                transition_chain.clear();
-                transitionToFrom(vis_mode, idle_vis_mode);
-            } else {
-                // off
-                idle_mode_on = false;
-                transitionToFrom(idle_vis_mode, VisMode::ZOOMED_OUT);
-            }
+            // cout << "/idle: " << m.getArgAsString(0) << endl;
+            // auto arg = m.getArgAsString(0);
+            // if(arg == "on") {
+            //     idle_mode_on = true;
+            //     transition_chain.clear();
+            //     transitionToFrom(vis_mode, idle_vis_mode);
+            // } else {
+            //     // off
+            //     idle_mode_on = false;
+            //     transitionToFrom(idle_vis_mode, VisMode::ZOOMED_OUT);
+            // }
         }
 		else
 		{
@@ -415,16 +417,19 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
                     grid_x = width/45;
                     grid_y =  height/25;
                 } else if(token_num == 5) { // message with w/h
-                    grid_x = float(width)/float(w);
-                    grid_y = float(height)/float(h);
+                    grid_x = float(width)/float(w + 2);
+                    grid_y = float(height)/float(h + 2);
                 }
                 auto it = player_trails.find(user_id);
+                // The + grid_x at the end is for margins
+                float calc_x = (x * grid_x) - halfw + grid_x;
+                float calc_y = (y * grid_y) - halfh + grid_y;
                 if(it == player_trails.end()) {
                     auto pt = PlayerTrail();
-                    pt.move_to_point((x * grid_x) - halfw, (y * grid_y) - halfh);
+                    pt.move_to_point(calc_x, calc_y);
                     player_trails.insert(make_pair<string, PlayerTrail>(move(user_id), move(pt)));
                 } else {
-                    it->second.move_to_point((x * grid_x) - halfw, (y * grid_y) - halfh);
+                    it->second.move_to_point(calc_x, calc_y);
                 }
             }
 
@@ -598,6 +603,14 @@ void ofApp::keyPressed(int key){
                 transitionToFrom(from, to);
                 break;
         }
+        case '7':
+        {
+                auto from = vis_mode;
+                vis_mode = static_cast<VisMode>(6);
+                auto to = vis_mode;
+                transitionToFrom(from, to);
+                break;
+        }
     }
 }
 
@@ -720,6 +733,11 @@ Transition ofApp::getTransitionToFrom(VisMode from, VisMode to) {
                 break;
             }
             case VisMode::FTRACE:
+            {
+                t.zoom_target = triangle_positions[TriangleVIS];
+                break;
+            }
+            case VisMode::FTRACE_RISING:
             {
                 t.zoom_target = triangle_positions[TriangleVIS];
                 break;

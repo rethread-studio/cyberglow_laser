@@ -7,9 +7,9 @@
 enum class WebServerVisMode {
 CIRCLE = 0,
 LINES,
-LINES_ONOFF,
 DOT,
 LAST,
+LINES_ONOFF, // It's a bit too intense
 };
 
 
@@ -92,7 +92,10 @@ class WebServerVis {
             for(auto& activity : activity) {
                 activity *= 0.95;
             }
-            float smooth_r = 0.1;
+            float smooth_r = 0.2;
+            if(vis_mode == WebServerVisMode::LINES) {
+                smooth_r = 0.35;
+            }
             for(int i = 0; i < activity.size(); i++) {
                 activity_smoothed[i] = activity_smoothed[i] * (1. - smooth_r) + activity[i] * smooth_r;
             }
@@ -161,13 +164,14 @@ class WebServerVis {
                 case WebServerVisMode::LINES:
                 {
                     float line_height = float(height)/float(activity.size());
+                    const float max_line_length = 0.5;
                     for(int i = 0; i < activity.size(); ++i) {
                         if(activity_smoothed[i] > 0.01) {
 
                             float y = line_height * i + line_height*0.5 - height*0.5;
-                            float length = min(activity_smoothed[i], 1.0f) * float(width);
-                            float x = length - width*0.5;
-                            laser.drawLine(width*-0.5, y, x, y, col, profile);
+                            float length = min(activity_smoothed[i], 1.0f) * float(width) * max_line_length;
+                            float x = length - width*0.5 * max_line_length;
+                            laser.drawLine(width*-0.5 * max_line_length, y, x, y, col, profile);
                         }
                     }
                     break;
@@ -175,12 +179,19 @@ class WebServerVis {
                 case WebServerVisMode::LINES_ONOFF:
                 {
                     float line_height = float(height)/float(activity.size());
+                    const float max_line_length = 0.25;
                     for(int i = 0; i < activity.size(); ++i) {
                         if(activity_received[i] > 0) {
 
                             float y = line_height * i + line_height*0.5 - height*0.5;
-                            float x = width*0.5;
-                            laser.drawLine(width*-0.5, y, x, y, col, profile);
+                            float x1 = width*-0.5 * max_line_length;
+                            // if(i >=13 && i <= 14) {
+                            //     x1 = width * -0.5;
+                            // } else if(i >= 15 && i <= 16) {
+                            //     x1 = width*0.5 - (width *max_line_length);
+                            // }
+                            float x2 = x1 + width* max_line_length;
+                            laser.drawLine(x1, y, x2, y, col, profile);
                         }
                     }
                     break;

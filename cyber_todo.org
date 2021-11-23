@@ -66,6 +66,18 @@ Some analysis (process? type?)
 Similar types of events start close to each other
 small subset of types
 
+** ftrace event types
+
+*** prefixes
+ys, dd, ix, cp, redit, random,
+
+There is probably one letter missing from the parsing in many of these
+- ys: sys
+- cp: tcp
+- dd: add? (mostly random events)
+- ix: irq_matrix
+- redit: credit (random event)
+
 * TODO Transitions between states
 
 # ** TODO Fly into one of the circles of the triangle
