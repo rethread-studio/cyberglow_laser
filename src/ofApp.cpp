@@ -61,8 +61,11 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-
-    laser.dacAssigner.updateDacList(); // Eventually this connects to the Etherdream. How to test when it has?
+    // Get the specific ofxLaser object that we are using
+    ofxLaser::Laser& specific_laser = laser.getLaser(0);
+    if(!specific_laser.hasDac()) {
+        laser.dacAssigner.updateDacList(); // Eventually this connects to the Etherdream. How to test when it has?
+    }
     static float last_time = 0;
     if(last_time == 0) {
         last_time = ofGetElapsedTimef();
