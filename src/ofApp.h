@@ -236,6 +236,7 @@ class ofApp : public ofBaseApp{
 		float time_per_vis = 45.0;
 		vector<Transition> transition_chain;
 
+		bool dac_connected_last_frame = false;
 
 		// **************** OSC ****************
 		ofxOscReceiver receiver;

@@ -64,8 +64,12 @@ void ofApp::update(){
     // Get the specific ofxLaser object that we are using
     ofxLaser::Laser& specific_laser = laser.getLaser(0);
     if(!specific_laser.hasDac()) {
+        dac_connected_last_frame = false;
         cout << "No DAC assigned, looking for new DACs" << endl;
         laser.dacAssigner.updateDacList(); // Eventually this connects to the Etherdream. How to test when it has?
+    } else if(!dac_connected_last_frame) {
+        dac_connected_last_frame = true;
+        laser.armAllLasers();
     }
     static float last_time = 0;
     if(last_time == 0) {
