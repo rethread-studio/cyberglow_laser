@@ -13,7 +13,7 @@ inline void draw_player(ofxLaser::Manager &laser, glm::vec2 position, ofColor co
     float radius = 30.0;
     laser.drawCircle(p, radius, col, profile);
     std::ostringstream os;
-    os << "X: " << floor(p.x) << " Y: " << floor(p.y);
+    // os << "X: " << floor(p.x) << " Y: " << floor(p.y);
     auto text_options = LaserTextOptions(15.0, color);
     draw_laser_text(laser, os.str(), text_options, p+glm::vec2(radius, -radius));
 }
@@ -36,7 +36,10 @@ class PlayerTrail {
         }
 
         void move_to_point(int x, int y) {
-            trail_positions.push_back(current_position);
+            // Don't store the default starting position
+            if(trail_positions.size() > 0) {
+                trail_positions.push_back(current_position);
+            }
             current_position = glm::vec2(x, y);
             while(trail_positions.size() > 3) {
                 trail_positions.erase(trail_positions.begin());

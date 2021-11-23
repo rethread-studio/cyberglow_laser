@@ -5,17 +5,20 @@
 #include "ofxLaserManager.h"
 
 enum class WebServerVisMode {
-CIRCLE,
+CIRCLE = 0,
 LINES,
 LINES_ONOFF,
 DOT,
+LAST,
 };
+
 
 class WebServerVis {
     public:
     static std::unordered_map<std::string, size_t> node_action_map;
 
-        WebServerVisMode vis_mode = WebServerVisMode::DOT;
+        int last_vis_mode;
+        WebServerVisMode vis_mode = WebServerVisMode::LINES;
         vector<float> activity;
         vector<float> activity_smoothed;
         vector<int> activity_received; // tracks the number of frames since activity was received
@@ -29,12 +32,13 @@ class WebServerVis {
             if(node_action_map.size() == 0) {
             }
             for(auto& el : node_action_map) {
-                cout << "key: " << el.first << endl;
+                // cout << "key: " << el.first << endl;
             }
             activity = vector<float>(17, 0.0);
             activity_smoothed = vector<float>(17, 0.0);
             activity_received = vector<int>(17, 0.0);
             activity_received_dots = vector<vector<int>>(17, vector<int>());
+            last_vis_mode = static_cast<int>(WebServerVisMode::LAST);
         }
 
         void register_node(string action) {
@@ -71,6 +75,19 @@ class WebServerVis {
                 activity_received_dots[index].push_back(0);
         }
 
+        void change_mode() {
+            if(last_vis_mode > 1) {
+                WebServerVisMode new_mode;
+                do {
+                    new_mode = static_cast<WebServerVisMode>(floor(ofRandom(last_vis_mode)));
+                } while(new_mode == vis_mode);
+                vis_mode = new_mode;
+            }
+        }
+
+        void change_mode(WebServerVisMode mode) {
+            vis_mode = mode;
+        }
         void update() {
             for(auto& activity : activity) {
                 activity *= 0.95;

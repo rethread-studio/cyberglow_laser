@@ -34,6 +34,12 @@ It is easier to read text drawn a few letters at a time.
 
 ** DONE All the letters
 
+* Optimisations
+
+** Limit the number of user event texts
+*** DONE Check the maximum number of text messages possible
+** TODO Player trail flickering
+
 * TODO Activity points
 
 ** TODO Limit number of activity points to improve speed
@@ -103,10 +109,16 @@ Tested: doesn't work, the laer doesn't have time to draw them and the colours do
 
 ** DONE More events in the web server view
 
-** TODO Server lines
+** DONE Server lines
 - full line turning on per event, or
 - a dot running horizontally
 
+
+* Documentation
+
+** TODO Pause function for creating stills
+- don't run update
+- don't accept new events
 
 * Knowledge Base
 

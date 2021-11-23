@@ -13,6 +13,7 @@ class EventStats {
         int triggers_without_release = 0;
         float dot_on_time = 0.05;
         int event_num = 0;
+        ofColor color = ofColor::white;
 
         EventStats(int event_num): event_num(event_num) {}
 
@@ -37,20 +38,32 @@ class EventStats {
             }
         }
 
-        void draw(ofxLaser::Manager &laser) {
+        void draw_dot(ofxLaser::Manager &laser) {
             // if(time_since_last_event < 0.5) {
             if(time_since_trigger < dot_on_time) {
                 float angle = -PI + event_num*0.45;
                 float radius = 100.0 + (event_num % 16) * 23.5;
                 float x = cos(angle) * radius;
                 float y = sin(angle) * radius;
-                const ofColor color = ofColor::white;
 #ifdef DEBUG_MODE
                 const float intensity = 1.;
 #else
                 const float intensity = 0.1;
 #endif
                 laser.drawDot(x, y, color, intensity, OFXLASER_PROFILE_DEFAULT);
+            }
+        }
+        void draw_rising(ofxLaser::Manager &laser, int width, int height) {
+            // if(time_since_last_event < 0.5) {
+            if(time_since_trigger < dot_on_time) {
+                float x = (event_num * 173) % width;
+                float y = height - (time_since_trigger / dot_on_time) * height;
+#ifdef DEBUG_MODE
+                const float intensity = 1.;
+#else
+                const float intensity = 0.1;
+#endif
+                laser.drawDot(x - width/2, y-height/2, color, intensity, OFXLASER_PROFILE_DEFAULT);
             }
         }
 };
@@ -60,6 +73,19 @@ class FtraceVis {
 
         ofColor color = ofColor::blue;
         map<string, EventStats> event_stats;
+        bool rising = false;
+        bool category_colors = false; // TODO
+        float dot_on_time = 0.05;
+
+        FtraceVis(bool rising): rising(rising) {
+            if(rising) {
+                dot_on_time = 1.0;
+            } else {
+                dot_on_time = 0.05;
+            }
+        }
+        FtraceVis(): FtraceVis(false) {}
+
 
         void register_event(string event) {
             // process;timestamp;event;pid?;cpu?
@@ -87,8 +113,9 @@ class FtraceVis {
             if(es != event_stats.end()) {
                 es->second.register_event();
             } else {
-                event_stats.insert({event_type, EventStats(event_stats.size())});
-                cout << "event type: " << event_type << endl;
+                EventStats e = EventStats(event_stats.size());
+                e.dot_on_time = dot_on_time;
+                event_stats.insert({event_type, e});
             }
         }
 
@@ -98,12 +125,21 @@ class FtraceVis {
             }
         }
 
-        void draw(ofxLaser::Manager &laser) {
+        void draw(ofxLaser::Manager &laser, int width, int height) {
                 // laser.drawDot(0, 0 , color, 0.5, OFXLASER_PROFILE_FAST);
+            if(rising) {
+
                 for(auto& es: event_stats) {
-                    es.second.draw(laser);
+                    es.second.draw_rising(laser, width, height);
                 }
+            } else {
+
+                for(auto& es: event_stats) {
+                    es.second.draw_dot(laser);
+                }
+            }
         }
 };
+
 
 #endif

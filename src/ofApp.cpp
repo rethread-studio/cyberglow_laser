@@ -21,7 +21,9 @@ void ofApp::setup(){
 
     user_grid = UserGrid(width, height);
     overview = Overview(triangle_positions);
+    text_flow = TextFlow(width, height);
     transition.type = TransitionType::NONE; // disable the transition at startup
+    ftrace_rising_vis = FtraceVis(true);
 
     auto text_options = LaserTextOptions();
     text_options.size = 80.0;
@@ -31,8 +33,27 @@ void ofApp::setup(){
     laser_texts.push_back(LaserText("RSTUVXY0123456789", text_options, 5, glm::vec2(width * 0.05 - halfw, height * 0.2 - halfh)));
     // laser_texts.push_back(LaserText("MOVE OPEN FILE", text_options, 4, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh + (text_options.size * 2))));
 
+    laser.update();
+
+    // Connect to etherdream dac
+    cout << "Update dacs" << endl;
+    laser.dacAssigner.updateDacList();
+    {
+    const vector<ofxLaser::DacData>& dacList = laser.dacAssigner.getDacList();
+    for(const ofxLaser::DacData& dacdata : dacList) {
+
+        // get the dac label (usually type + unique ID)
+        string itemlabel = dacdata.label;
+        cout << "DAC: " << itemlabel << endl;
+        if(itemlabel == "Etherdream 66E6349EFA66") {
+            laser.dacAssigner.assignToLaser(dacdata.label, laser.getLaser(0));
+        }
+    }
+    }
+    // Arm lasers and increase brightness
     laser.armAllLasers();
     laser.globalBrightness.set(1.0);
+
     // for(auto& l : laser.lasers) {
     //     l->intensity.set(0.5);
     // }
@@ -41,6 +62,7 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
 
+    laser.dacAssigner.updateDacList(); // Eventually this connects to the Etherdream. How to test when it has?
     static float last_time = 0;
     if(last_time == 0) {
         last_time = ofGetElapsedTimef();
@@ -49,15 +71,10 @@ void ofApp::update(){
     float dt = now - last_time;
     last_time = now;
 
-    if(automatic_transitions) {
+    if(automatic_transitions && !(transition_at_new_question || transition_at_answer) && !idle_mode_on) {
         next_transition_countdown -= dt;
         if(next_transition_countdown <= 0.0) {
-            VisMode next_vis;
-            do {
-                int next_vis_num = int(ofRandom(0, static_cast<int>(VisMode::LAST)));
-                next_vis = static_cast<VisMode>(next_vis_num);
-            } while(next_vis == vis_mode);
-            transitionToFrom(vis_mode, next_vis);
+            activateTransitionToNext();
             next_transition_countdown = time_per_vis;
         }
     }
@@ -102,6 +119,7 @@ void ofApp::update(){
     }
     text_flow.update(width);
     ftrace_vis.update(dt);
+    ftrace_rising_vis.update(dt);
     user_grid.update(dt);
 
     auto pt = player_trails.find(current_player_trail_id);
@@ -164,8 +182,6 @@ void ofApp::draw(){
             drawVisualisation(vis_mode, 1.0);
         }
     }
-
-
 
     ofPopMatrix();
     // sends points to the DAC
@@ -254,6 +270,21 @@ void ofApp::pickRandomPlayerTrail() {
     }
 }
 
+void ofApp::activateTransitionToNext() {
+
+    VisMode next_vis;
+    if(use_fixed_order_transitions) {
+        next_vis = vis_mode_order[vis_mode_order_index];
+        vis_mode_order_index = (vis_mode_order_index + 1) % vis_mode_order.size();
+    } else {
+        do {
+            int next_vis_num = int(ofRandom(0, static_cast<int>(VisMode::LAST)));
+            next_vis = static_cast<VisMode>(next_vis_num);
+        } while(next_vis == vis_mode);
+    }
+    transitionToFrom(vis_mode, next_vis);
+}
+
 
 void ofApp::checkOscMessages() {
   // check for waiting messages
@@ -277,6 +308,20 @@ void ofApp::checkOscMessages() {
         else if(m.getAddress() == "/ftrace") {
             ftrace_vis.register_event(m.getArgAsString(0));
             // cout << "ftrace: " << m.getArgAsString(0) << endl;
+        }
+
+        else if(m.getAddress() == "/idle") {
+            cout << "/idle: " << m.getArgAsString(0) << endl;
+            auto arg = m.getArgAsString(0);
+            if(arg == "on") {
+                idle_mode_on = true;
+                transition_chain.clear();
+                transitionToFrom(vis_mode, idle_vis_mode);
+            } else {
+                // off
+                idle_mode_on = false;
+                transitionToFrom(idle_vis_mode, VisMode::ZOOMED_OUT);
+            }
         }
 		else
 		{
@@ -309,18 +354,32 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
 
         } else if(action == "newQuestion") {
             string question = arguments;
+            if(automatic_transitions && transition_at_new_question && !idle_mode_on ) {
+                activateTransitionToNext();
+            }
+            answer_for_current_question_received = false;
         }
 
     } else if(origin == "user") {
 
         string text = action; // + " " + arguments;
-        text_flow.add_text(text, laser, width, height);
+        if(action != "userAnswer") {
+            text_flow.add_text(text, laser, width, height);
+        }
+        if(action == "userAnswer") {
+            if(automatic_transitions && transition_at_answer && !answer_for_current_question_received) {
+                activateTransitionToNext();
+            }
+            answer_for_current_question_received = true;
+        }
         user_grid.register_event(action, arguments);
         addActivityPoint(TriangleUSER);
         if(action == "move") {
+            // id, x, y, width_cells, height_cells
             arguments += ';';
             string user_id = "";
             int x = 0, y = 0;
+            int w = 1, h = 1;
 
             size_t pos = 0;
             std::string token;
@@ -337,26 +396,40 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
                     case 2:
                         y = stoi(token);
                         break;
+                    case 3:
+                        w = stoi(token);
+                        break;
+                    case 4:
+                        h = stoi(token);
+                        break;
                 }
                 token_num++;
                 arguments.erase(0, pos + delimiter.length());
             }
-            if(token_num == 3) { // correct number of arguments found
+            if(token_num >= 3) {
+                float grid_x, grid_y;
+                if(token_num == 3) { // message without w/h
+                    grid_x = width/45;
+                    grid_y =  height/25;
+                } else if(token_num == 5) { // message with w/h
+                    grid_x = float(width)/float(w);
+                    grid_y = float(height)/float(h);
+                }
                 auto it = player_trails.find(user_id);
                 if(it == player_trails.end()) {
                     auto pt = PlayerTrail();
-                    float grid_x = width/45;
-                    float grid_y = height/25;
                     pt.move_to_point((x * grid_x) - halfw, (y * grid_y) - halfh);
                     player_trails.insert(make_pair<string, PlayerTrail>(move(user_id), move(pt)));
                 } else {
-                    it->second.move_to_point((x * 100) - halfw, (y * 100) - halfh);
+                    it->second.move_to_point((x * grid_x) - halfw, (y * grid_y) - halfh);
                 }
             }
 
         } else if(action == "enterAnswer") {
+            // user moves inside the answer zone
 
         } else if(action == "userAnswer") {
+            // the time has ended and the user has answered
 
         } else if(action == "new") {
             string user_id = arguments;
@@ -412,7 +485,12 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
         }
         case VisMode::FTRACE:
         {
-            ftrace_vis.draw(laser);
+            ftrace_vis.draw(laser, width, height);
+            break;
+        }
+        case VisMode::FTRACE_RISING:
+        {
+            ftrace_rising_vis.draw(laser, width, height);
             break;
         }
         case VisMode::ZOOMED_OUT:
@@ -422,8 +500,10 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
             for(size_t i = 0; i < 3; i++) {
                 laser.drawDot(triangle_positions[i].x * scale, triangle_positions[i].y * scale, ofColor::blue, intensity, OFXLASER_PROFILE_FAST);
                 float radius = powf(triangle_activity[i], 0.5) * height * 0.08 + 10;
-                radius = radius * scale; // use sqrt because the radius is used in both directions
-                laser.drawCircle(triangle_positions[i].x * scale, triangle_positions[i].y * scale, radius, ofColor::blue, OFXLASER_PROFILE_FAST);
+                if(transition.active()) {
+                    radius = 15.0;
+                }
+                laser.drawCircle(triangle_positions[i].x , triangle_positions[i].y, radius, ofColor::blue, OFXLASER_PROFILE_FAST);
             }
             // for(auto& elc : event_line_columns) {
             //     elc.draw(laser, scan_x, scan_width);
@@ -460,6 +540,13 @@ void ofApp::keyPressed(int key){
                 transitionToFrom(from, to);
             }
             break;
+        case 'c':
+        {
+            if(vis_mode == VisMode::WEBSERVER) {
+                web_server_vis.change_mode();
+            }
+            break;
+            }
         case '1':
         {
                 auto from = vis_mode;
@@ -572,7 +659,7 @@ int visModeCategory(VisMode vis) {
 			  || vis == VisMode::USER_GRID
 			  || vis == VisMode::TEXT_DEMO) {
 		return TriangleUSER;
-	} else if(vis == VisMode::FTRACE) {
+	} else if(vis == VisMode::FTRACE || vis == VisMode::FTRACE_RISING) {
 		return TriangleVIS;
 	} else if(vis == VisMode::ZOOMED_OUT) {
 		return 3;
@@ -586,6 +673,14 @@ bool vismodesAreInTheSamePlace(VisMode vis1, VisMode vis2) {
 
 void ofApp::transitionToFrom(VisMode from, VisMode to) {
     vis_mode = to; // the vis_mode should now be the new target mode
+    // Update the mode we're transitioning to
+    switch(to) {
+        case VisMode::WEBSERVER:
+        {
+            web_server_vis.change_mode(); // randomly change to a different mode
+            break;
+        }
+    }
     if(to == VisMode::ZOOMED_OUT || from == VisMode::ZOOMED_OUT || vismodesAreInTheSamePlace(from, to)) {
         Transition t = getTransitionToFrom(from, to);
         transition = t;

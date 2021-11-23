@@ -160,7 +160,6 @@ class UserGrid {
             } else {
                 float x = (current_cell % cells_x) * cell_w + start_x;
                 float y = floor(float(current_cell)/float(cells_x)) * cell_h + start_y;
-                cout << "new ud at " << x << ", " << y << " index: " << current_cell << endl;
                 current_cell = (current_cell + cell_jump) % (cells_x * cells_y);
                 auto ud = UserData(glm::vec2(x, y));
                 ud.register_event(action, arguments);

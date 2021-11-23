@@ -29,6 +29,7 @@ USER_GRID,
 ZOOMED_OUT,
 TEXT_DEMO,
 FTRACE,
+FTRACE_RISING,
 LAST,
 };
 
@@ -185,6 +186,7 @@ class ofApp : public ofBaseApp{
 		void drawTransition(Transition transition_);
 		void drawVisualisation(VisMode vis, float scale);
 
+		void activateTransitionToNext();
 		void transitionToFrom(VisMode from, VisMode to);
 		Transition getTransitionToFrom(VisMode from, VisMode to);
 
@@ -199,6 +201,7 @@ class ofApp : public ofBaseApp{
 		vector<EventLineColumn> event_line_columns;
 		unordered_map<string, PlayerTrail> player_trails;
 		FtraceVis ftrace_vis;
+		FtraceVis ftrace_rising_vis;
 		Overview overview;
 
 		WebServerVis web_server_vis;
@@ -221,6 +224,14 @@ class ofApp : public ofBaseApp{
 		float rot_x = 0.0;
 
 		bool automatic_transitions = false;
+		bool use_fixed_order_transitions = true;
+		bool transition_at_new_question = false;
+		bool transition_at_answer = true;
+		bool answer_for_current_question_received = false;
+		vector<VisMode> vis_mode_order{VisMode::ZOOMED_OUT, VisMode::WEBSERVER, VisMode::USER, VisMode::USER_GRID, VisMode::FTRACE, VisMode::WEBSERVER, VisMode::TEXT_DEMO};
+		VisMode idle_vis_mode = VisMode::FTRACE;
+		bool idle_mode_on = false;
+		int vis_mode_order_index = 0;
 		float next_transition_countdown = 0.0;
 		float time_per_vis = 45.0;
 		vector<Transition> transition_chain;

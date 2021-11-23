@@ -1,3 +1,5 @@
+# ignore Makefiles etc with hardcoded paths
+
 .DS_Store
 .idea
 *.log
