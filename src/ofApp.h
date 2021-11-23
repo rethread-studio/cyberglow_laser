@@ -59,7 +59,7 @@ class Transition {
 			to_vis = VisMode::WEBSERVER;
 			spin_axis= glm::vec3(0, 1.0, 0);
 			phase = 0.0;
-			duration = 1.0;
+			duration = 10.0;
 		}
 
 
@@ -223,7 +223,7 @@ class ofApp : public ofBaseApp{
 		float rot_y = 0.0;
 		float rot_x = 0.0;
 
-		bool automatic_transitions = false;
+		bool automatic_transitions = true;
 		bool use_fixed_order_transitions = true;
 		bool transition_at_new_question = false;
 		bool transition_at_answer = true;

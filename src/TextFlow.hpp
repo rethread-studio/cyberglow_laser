@@ -9,8 +9,8 @@ class TextFlow {
     public:
         vector<LaserText> texts;
         LaserTextOptions options;
-        float velocity = 10.0;
-        int max_num_texts = 30;
+        float velocity = 18.0;
+        int max_num_texts = 11;
         // scrambled list of y positions to distribute messages equally across the y
         vector<float> y_options;
         int y_option_index = 0;
@@ -46,7 +46,7 @@ class TextFlow {
                 std::random_shuffle ( y_options.begin(), y_options.end() );
                 y_option_index = 0;
             }
-            LaserText lt = LaserText(text, options, 4, glm::vec2(0, y - (height/2)));
+            LaserText lt = LaserText(text, options, 3, glm::vec2(0, y - (height/2)));
             float text_width = lt.get_width(laser);
             // Start to the left of the canvas
             lt.pos.x = width/-2 - text_width;
