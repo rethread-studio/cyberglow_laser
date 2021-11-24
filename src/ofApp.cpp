@@ -260,6 +260,9 @@ void ofApp::addActivityPoint(int source) {
     ap.launch_towards(destination, vel_amp);
     ap.grow(ofRandom(0.0, 0.5));
     activity_points.push_back(ap);
+    while(activity_points.size() > max_num_activity_points) {
+        activity_points.erase(activity_points.begin());
+    }
     triangle_activity[source] += 0.1;
 }
 

@@ -198,6 +198,7 @@ class ofApp : public ofBaseApp{
 		glm::vec2 triangle_positions[3];
 		float triangle_activity[3];
 		vector<ActivityPoint> activity_points;
+		size_t max_num_activity_points = 20;
 		vector<EventLineColumn> event_line_columns;
 		unordered_map<string, PlayerTrail> player_trails;
 		FtraceVis ftrace_vis;
@@ -240,7 +241,7 @@ class ofApp : public ofBaseApp{
 
 		// **************** OSC ****************
 		ofxOscReceiver receiver;
-		int PORT = 57130;
+		int PORT = 57131;
 		void checkOscMessages();
 		void parseOscMessage(string origin, string action, string arguments);
 };
