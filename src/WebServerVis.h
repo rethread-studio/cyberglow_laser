@@ -6,9 +6,9 @@
 
 enum class WebServerVisMode {
 CIRCLE = 0,
-LINES,
 DOT,
 LAST,
+LINES,
 LINES_ONOFF, // It's a bit too intense
 };
 
@@ -70,7 +70,7 @@ class WebServerVis {
             }
         }
         void register_activity(size_t index) {
-                activity[index]+= 1.0;
+                activity[index]+= 0.3;
                 activity_received[index] = 10;
                 activity_received_dots[index].push_back(0);
         }
@@ -203,7 +203,7 @@ class WebServerVis {
             #ifdef DEBUG_MODE
             float dot_intensity = 1.0; // So we can see the dots on the screen
             #else
-            float dot_intensity = 1.0 / float(activity.size());
+            float dot_intensity = 0.005;
             #endif
                     for(int i = 0; i < activity_received_dots.size(); ++i) {
                         auto& event = activity_received_dots[i];

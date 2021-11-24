@@ -174,10 +174,12 @@ void ofApp::draw(){
     // Translating the coordinate system also works
 
     if(transition.active()) {
-        ofPushMatrix();
-        transition.applyTransitionFrom();
-        drawVisualisation(transition.from_vis, 1.0);
-        ofPopMatrix();
+        if(transition.from_vis != VisMode::ZOOMED_OUT || transition.phase < 0.65) {
+            ofPushMatrix();
+            transition.applyTransitionFrom();
+            drawVisualisation(transition.from_vis, 1.0);
+            ofPopMatrix();
+        }
         ofPushMatrix();
         transition.applyTransitionTo();
         drawVisualisation(transition.to_vis, 1.0);
@@ -190,12 +192,12 @@ void ofApp::draw(){
             transition_chain.erase(transition_chain.begin());
             // draw
             ofPushMatrix();
-            float scale = transition.applyTransitionFrom();
-            drawVisualisation(transition.from_vis, scale);
+            transition.applyTransitionFrom();
+            drawVisualisation(transition.from_vis, 1.0);
             ofPopMatrix();
             ofPushMatrix();
-            scale = transition.applyTransitionTo();
-            drawVisualisation(transition.to_vis, scale);
+            transition.applyTransitionTo();
+            drawVisualisation(transition.to_vis, 1.0);
             ofPopMatrix();
         } else {
             drawVisualisation(vis_mode, 1.0);
@@ -322,7 +324,7 @@ void ofApp::checkOscMessages() {
 		ofxOscMessage m;
 		receiver.getNextMessage( &m );
 
-        //cout << "message: " << m << endl;
+        // cout << "message: " << m << endl;
 
         // Only parse the message if we are not paused
 		if(!is_paused) {
