@@ -39,26 +39,27 @@ It is easier to read text drawn a few letters at a time.
 ** Limit the number of user event texts
 *** DONE Check the maximum number of text messages possible
 ** TODO Player trail flickering
+** DONE Add off time on laser text for the zoomed out view
 
-* TODO Activity points
+* DONE Activity points
 
-** TODO Limit number of activity points to improve speed
+** DONE Limit number of activity points to improve speed
 If there are too many points already, maybe some points can merge into one bigger point?
 
 ** DONE Draw activity points as points
 Drawing points instead of circles is waaaay faster.
 
 * User views
-** TODO Fix user move coordinate
+** DONE Fix user move coordinate
 ** DONE Show all user events separately
 
 * Ftrace visualisations
 
 ** DONE Many very short dots, one long dot in the middle
 
-** TODO Colour code error codes
+** DONE Colour code error codes
 
-** TODO Something rising from the bottom up
+** DONE Something rising from the bottom up
 System calls
 Some analysis (process? type?)
 
@@ -78,7 +79,7 @@ There is probably one letter missing from the parsing in many of these
 - ix: irq_matrix
 - redit: credit (random event)
 
-* TODO Transitions between states
+* DONE Transitions between states
 
 # ** TODO Fly into one of the circles of the triangle
 Maybe spin around at the end to reveal like the inside?
@@ -89,9 +90,9 @@ Looks good on the laser!! I need to fix the issue with zooming into/out of a spe
 
 ** DONE Automatic transitions
 
-* TODO Automatically connect and arm laser on startup
+* DONE Automatically connect and arm laser on startup
 
-** TODO Find Etherdream automatically
+** DONE Find Etherdream automatically
 This is the only part left, try it with the box.
 
 * View ideas
@@ -108,13 +109,13 @@ More details could be optionally drawn on the same view
 Different colours for different events
 Tested: doesn't work, the laer doesn't have time to draw them and the colours don't work with low intensity dots.
 
-** TODO Stack trace like view?
+** HOLD Stack trace like view?
 
-** TODO Heartbeat monitor for events
+** HOLD Heartbeat monitor for events
 
 ** DONE User view for events per user
 
-** TODO One colour per source of data
+** DONE One colour per source of data
 - users
 - server
 - room and OS
@@ -128,7 +129,7 @@ Tested: doesn't work, the laer doesn't have time to draw them and the colours do
 
 * Documentation
 
-** TODO Pause function for creating stills
+** DONE Pause function for creating stills
 - don't run update
 - don't accept new events
 

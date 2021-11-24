@@ -1,4 +1,5 @@
 #include "ofApp.h"
+#include "constants.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -121,7 +122,11 @@ void ofApp::update(){
         }
 
         for(size_t i = 0; i < 3; i++) {
-            triangle_activity[i] *= 0.95;
+            if(i == TriangleVIS) {
+                triangle_activity[i] *= 0.8;
+            } else {
+                triangle_activity[i] *= 0.95;
+            }
             if(triangle_activity[i] > 1.0) {
                 triangle_activity[i] = 1.0;
             }
@@ -242,6 +247,7 @@ void ofApp::addActivityPoint(int source) {
     if(source >= 3) {
         return;
     }
+    if(source != TriangleVIS) {
     float offset_angle = ofRandom(0, TWO_PI);
     float offset = ofRandom(0, width*0.07);
     glm::vec2 position = triangle_positions[source] - glm::vec2(cos(offset_angle) * offset, sin(offset_angle) * offset);
@@ -269,7 +275,12 @@ void ofApp::addActivityPoint(int source) {
     while(activity_points.size() > max_num_activity_points) {
         activity_points.erase(activity_points.begin());
     }
-    triangle_activity[source] += 0.1;
+    }
+    float activity_level_increase = 0.1;
+    if(source == TriangleVIS) {
+        activity_level_increase = 0.00006;
+    }
+    triangle_activity[source] += activity_level_increase;
 }
 
 void ofApp::pickRandomPlayerTrail() {
@@ -328,6 +339,7 @@ void ofApp::checkOscMessages() {
                 ftrace_vis.register_event(m.getArgAsString(0));
                 ftrace_rising_vis.register_event(m.getArgAsString(0));
                 // cout << "ftrace: " << m.getArgAsString(0) << endl;
+                addActivityPoint(TriangleVIS);
             }
 
             else if(m.getAddress() == "/idle") {
