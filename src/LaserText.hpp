@@ -416,6 +416,10 @@ class LaserText {
         int numChars = 3; //
         int moveCounter = 0;
         int framesPerChar = 5;
+        bool off = false;
+        int offFrames = 2;
+        int offFrameCounter = 0;
+        bool resetFrame = true; // If this is the frame the text was reset
         glm::vec2 pos;
         LaserText(string text, LaserTextOptions options, int numCharacters, glm::vec2 pos):
             text(text), options(options), numChars(numCharacters), pos(pos)  {
@@ -424,10 +428,26 @@ class LaserText {
 
         void update() {
             moveCounter--;
+            resetFrame = false;
             if(moveCounter <= 0) {
-                charPtr += 1;
-                if(charPtr >= text.size() + numChars) {
-                    charPtr = 0;
+                if(off) {
+                    offFrameCounter++;
+                    if(offFrameCounter >= offFrames) {
+                        off = false;
+                        charPtr = 0;
+                        resetFrame = true;
+                    }
+                } else {
+                    charPtr += 1;
+                    if(charPtr >= text.size() + numChars) {
+                        if(offFrames > 0) {
+                            off = true;
+                            offFrameCounter = 0;
+                        } else {
+                            charPtr = 0;
+                            resetFrame = true;
+                        }
+                    }
                 }
                 moveCounter = framesPerChar;
             }

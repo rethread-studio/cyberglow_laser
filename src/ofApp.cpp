@@ -79,70 +79,76 @@ void ofApp::update(){
     float dt = now - last_time;
     last_time = now;
 
-    if(automatic_transitions && !(transition_at_new_question || transition_at_answer) && !idle_mode_on) {
-        next_transition_countdown -= dt;
-        if(next_transition_countdown <= 0.0) {
-            activateTransitionToNext();
-            next_transition_countdown = time_per_vis;
-        }
-    }
-    transition.update(dt);
-
-    // For some visualisations, transition to self automatically
-    if(!transition.active() && transition_chain.size() == 0 &&
-       (vis_mode == VisMode::FTRACE )) {
-        transitionToFrom(vis_mode, vis_mode);
-    }
-
+    // Checking for OSC messages should be done even if paused to discard messages and avoid a large peak
     checkOscMessages();
 
-    scan_x += 10;
-    if(scan_x > halfw) {
-        scan_x = -halfw;
-    }
-
-    noise_counter += 0.001;
-    rot_x = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01) * 2.0 - 1.0;
-    rot_y = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01 + 2534.0) * 2.0 - 1.0;
-
-    for(auto& ap : activity_points) {
-        ap.update();
-    }
-    // remove expired activity points
-    for(int i = activity_points.size()-1; i >= 0; i--) {
-        if(activity_points[i].frames_to_live <= 0) {
-            activity_points.erase(activity_points.begin() + i);
+    if(!is_paused) {
+        if(automatic_transitions && !(transition_at_new_question || transition_at_answer) && !idle_mode_on) {
+            next_transition_countdown -= dt;
+            if(next_transition_countdown <= 0.0) {
+                activateTransitionToNext();
+                next_transition_countdown = time_per_vis;
+            }
         }
-    }
+        transition.update(dt);
 
-    for(size_t i = 0; i < 3; i++) {
-        triangle_activity[i] *= 0.95;
-        if(triangle_activity[i] > 1.0) {
-            triangle_activity[i] = 1.0;
+        // For some visualisations, transition to self automatically
+        if(!transition.active() && transition_chain.size() == 0 &&
+           (vis_mode == VisMode::FTRACE )) {
+            transitionToFrom(vis_mode, vis_mode);
         }
-    }
 
-    for(auto& lt : laser_texts) {
-        lt.update();
-    }
-    text_flow.update(width);
-    ftrace_vis.update(dt);
-    ftrace_rising_vis.update(dt);
-    user_grid.update(dt);
 
-    auto pt = player_trails.find(current_player_trail_id);
-    if(pt != player_trails.end()) {
-        if(pt->second.finished_cycle) {
+        overview.update();
+
+        scan_x += 10;
+        if(scan_x > halfw) {
+            scan_x = -halfw;
+        }
+
+        noise_counter += 0.001;
+        rot_x = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01) * 2.0 - 1.0;
+        rot_y = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01 + 2534.0) * 2.0 - 1.0;
+
+        for(auto& ap : activity_points) {
+            ap.update();
+        }
+        // remove expired activity points
+        for(int i = activity_points.size()-1; i >= 0; i--) {
+            if(activity_points[i].frames_to_live <= 0) {
+                activity_points.erase(activity_points.begin() + i);
+            }
+        }
+
+        for(size_t i = 0; i < 3; i++) {
+            triangle_activity[i] *= 0.95;
+            if(triangle_activity[i] > 1.0) {
+                triangle_activity[i] = 1.0;
+            }
+        }
+
+        for(auto& lt : laser_texts) {
+            lt.update();
+        }
+        text_flow.update(width);
+        ftrace_vis.update(dt);
+        ftrace_rising_vis.update(dt);
+        user_grid.update(dt);
+
+        auto pt = player_trails.find(current_player_trail_id);
+        if(pt != player_trails.end()) {
+            if(pt->second.finished_cycle) {
+                pickRandomPlayerTrail();
+            }
+        } else {
             pickRandomPlayerTrail();
         }
-    } else {
-        pickRandomPlayerTrail();
+        //Update event line columns
+        for(auto& elc : event_line_columns) {
+            elc.update();
+        }
+        web_server_vis.update();
     }
-    //Update event line columns
-    for(auto& elc : event_line_columns) {
-        elc.update();
-    }
-    web_server_vis.update();
     // prepares laser manager to receive new graphics
     laser.update();
 }
@@ -298,51 +304,53 @@ void ofApp::activateTransitionToNext() {
 
 
 void ofApp::checkOscMessages() {
-  // check for waiting messages
+    // check for waiting messages
 	while( receiver.hasWaitingMessages() )
 	{
 		// get the next message
 		ofxOscMessage m;
 		receiver.getNextMessage( &m );
 
-    //cout << "message: " << m << endl;
+        //cout << "message: " << m << endl;
 
-		// check for mouse moved message
-		if (m.getAddress() == "/cyberglow"  )
-		{
-            string origin = m.getArgAsString(0);
-            string action = m.getArgAsString(1);
-            string arguments = m.getArgAsString(2);
-            // cout << "OSC mess: " << origin << ", " << action << ", " << arguments << endl;
-            parseOscMessage(origin, action, arguments);
-		}
-        else if(m.getAddress() == "/ftrace") {
-            ftrace_vis.register_event(m.getArgAsString(0));
-            ftrace_rising_vis.register_event(m.getArgAsString(0));
-            // cout << "ftrace: " << m.getArgAsString(0) << endl;
+        // Only parse the message if we are not paused
+		if(!is_paused) {
+            // check for mouse moved message
+            if (m.getAddress() == "/cyberglow"  )
+            {
+                string origin = m.getArgAsString(0);
+                string action = m.getArgAsString(1);
+                string arguments = m.getArgAsString(2);
+                // cout << "OSC mess: " << origin << ", " << action << ", " << arguments << endl;
+                parseOscMessage(origin, action, arguments);
+            }
+            else if(m.getAddress() == "/ftrace") {
+                ftrace_vis.register_event(m.getArgAsString(0));
+                ftrace_rising_vis.register_event(m.getArgAsString(0));
+                // cout << "ftrace: " << m.getArgAsString(0) << endl;
+            }
+
+            else if(m.getAddress() == "/idle") {
+                // cout << "/idle: " << m.getArgAsString(0) << endl;
+                // auto arg = m.getArgAsString(0);
+                // if(arg == "on") {
+                //     idle_mode_on = true;
+                //     transition_chain.clear();
+                //     transitionToFrom(vis_mode, idle_vis_mode);
+                // } else {
+                //     // off
+                //     idle_mode_on = false;
+                //     transitionToFrom(idle_vis_mode, VisMode::ZOOMED_OUT);
+                // }
+            }
+            else
+            {
+                // cout << "Received unknown message to " << m.getAddress() << endl;
+                // unrecognized message
+
+            }
         }
-
-        else if(m.getAddress() == "/idle") {
-            // cout << "/idle: " << m.getArgAsString(0) << endl;
-            // auto arg = m.getArgAsString(0);
-            // if(arg == "on") {
-            //     idle_mode_on = true;
-            //     transition_chain.clear();
-            //     transitionToFrom(vis_mode, idle_vis_mode);
-            // } else {
-            //     // off
-            //     idle_mode_on = false;
-            //     transitionToFrom(idle_vis_mode, VisMode::ZOOMED_OUT);
-            // }
-        }
-		else
-		{
-            // cout << "Received unknown message to " << m.getAddress() << endl;
-			// unrecognized message
-
-		}
-
-  }
+    }
 }
 
 void ofApp::parseOscMessage(string origin, string action, string arguments) {
@@ -524,10 +532,12 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
             //     elc.draw(laser, scan_x, scan_width);
             // }
             // overview.draw_symbols(laser);
-            overview.draw_text(laser);
-            // draw point activity
-            for(auto& ap : activity_points) {
-                ap.draw(laser, scale);
+            if(!transition.active()) {
+                overview.draw_text(laser);
+                // draw point activity
+                for(auto& ap : activity_points) {
+                    ap.draw(laser, scale);
+                }
             }
             break;
         }
@@ -562,6 +572,11 @@ void ofApp::keyPressed(int key){
             }
             break;
             }
+        case ' ':
+        {
+            is_paused = !is_paused;
+            break;
+        }
         case '1':
         {
                 auto from = vis_mode;

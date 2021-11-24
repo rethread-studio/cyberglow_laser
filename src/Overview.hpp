@@ -12,6 +12,7 @@ class Overview {
         vector<LaserText> location_texts;
 
         bool finished_init = false;
+        int text_index = 0;
 
         Overview() {}
 
@@ -28,6 +29,9 @@ class Overview {
             location_texts.push_back(LaserText("SERVER", options, 3, triangle_positions[TriangleSERVER]+o));
             location_texts.push_back(LaserText("USER", options, 3, triangle_positions[TriangleUSER]+o));
 
+            for(auto& text : location_texts) {
+                text.offFrames = 12;
+            }
         }
 
         void draw_symbols(ofxLaser::Manager &laser) {
@@ -60,6 +64,18 @@ class Overview {
             laser.drawPoly(poly, color, profile);
         }
 
+        void update() {
+            if(finished_init) {
+                // for(auto& text : location_texts) {
+                //     text.update();
+                // }
+                location_texts[text_index].update();
+                if(location_texts[text_index].resetFrame) {
+                    text_index = (text_index+1)%location_texts.size();
+                }
+            }
+        }
+
         void draw_text(ofxLaser::Manager &laser) {
             if(!finished_init) {
                 // location_texts[TriangleUSER].pos.x -= location_texts[TriangleUSER].get_width(laser) + 20;
@@ -70,10 +86,10 @@ class Overview {
                 finished_init = true;
             }
 
-            for(auto& text : location_texts) {
-                text.update();
-                text.draw(laser);
-            }
+            // for(auto& text : location_texts) {
+            //     text.draw(laser);
+            // }
+            location_texts[text_index].draw(laser);
         }
 };
 

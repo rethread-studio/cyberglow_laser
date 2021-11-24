@@ -193,6 +193,7 @@ class ofApp : public ofBaseApp{
 
 		VisMode vis_mode = VisMode::WEBSERVER;
 		Transition transition;
+		bool is_paused = false; // When paused, the image should be static (for photography)
 
 		ofxLaser::Manager laser;
 		glm::vec2 triangle_positions[3];
