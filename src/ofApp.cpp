@@ -174,16 +174,20 @@ void ofApp::draw(){
     // Translating the coordinate system also works
 
     if(transition.active()) {
-        if(transition.from_vis != VisMode::ZOOMED_OUT || transition.phase < 0.65) {
+        if((transition.from_vis != VisMode::ZOOMED_OUT || transition.phase < 0.65)
+           && (transition.to_vis != VisMode::ZOOMED_OUT || transition.phase < 0.45)
+        ) {
             ofPushMatrix();
             transition.applyTransitionFrom();
             drawVisualisation(transition.from_vis, 1.0);
             ofPopMatrix();
         }
-        ofPushMatrix();
-        transition.applyTransitionTo();
-        drawVisualisation(transition.to_vis, 1.0);
-        ofPopMatrix();
+        if(transition.from_vis != VisMode::ZOOMED_OUT || transition.phase > 0.25) {
+            ofPushMatrix();
+            transition.applyTransitionTo();
+            drawVisualisation(transition.to_vis, 1.0);
+            ofPopMatrix();
+        }
     } else {
         if(transition_chain.size() > 0) {
             // pick the next transition from the chain

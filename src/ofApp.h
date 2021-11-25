@@ -242,7 +242,7 @@ class ofApp : public ofBaseApp{
 
 		// **************** OSC ****************
 		ofxOscReceiver receiver;
-		int PORT = 57130;
+		int PORT = 57131;
 		void checkOscMessages();
 		void parseOscMessage(string origin, string action, string arguments);
 };
