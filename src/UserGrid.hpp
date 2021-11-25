@@ -21,7 +21,7 @@ NONE
 
 class UserData {
     public:
-        float event_lifetime = 10.0; // in seconds
+        float event_lifetime = 1.0; // in seconds
         vector<pair<UserEvent, float>> events;
         float time_since_last_event = 0.0;
         glm::vec2 position;
@@ -131,7 +131,7 @@ class UserGrid {
             vector<decltype(user_datas)::key_type> keys_to_delete;
             for(auto& ud: user_datas) {
                 ud.second.update(dt);
-                if(ud.second.time_since_last_event > 15.0) {
+                if(ud.second.time_since_last_event > 60.0) {
                     keys_to_delete.push_back(ud.first);
                 }
             }
