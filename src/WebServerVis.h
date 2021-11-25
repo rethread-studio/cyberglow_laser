@@ -70,7 +70,7 @@ class WebServerVis {
             }
         }
         void register_activity(size_t index) {
-                activity[index]+= 0.3;
+                activity[index]+= 0.2;
                 activity_received[index] = 10;
                 activity_received_dots[index].push_back(0);
         }
@@ -90,7 +90,7 @@ class WebServerVis {
         }
         void update() {
             for(auto& activity : activity) {
-                activity *= 0.95;
+                activity *= 0.9;
             }
             float smooth_r = 0.2;
             if(vis_mode == WebServerVisMode::LINES) {
