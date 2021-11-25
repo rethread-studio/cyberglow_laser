@@ -137,3 +137,9 @@ Tested: doesn't work, the laer doesn't have time to draw them and the colours do
 
 ** Dot intensity
 It seems like the maximum dot intensity is approximately 1.0 / (number_of_dots * 4)
+
+* From test
+
+** TODO Disable vis being transitioned from because it becomes too bright when it's tiny
+
+** Try to get rid of the flickering

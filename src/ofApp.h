@@ -228,14 +228,14 @@ class ofApp : public ofBaseApp{
 		bool automatic_transitions = true;
 		bool use_fixed_order_transitions = true;
 		bool transition_at_new_question = false;
-		bool transition_at_answer = true;
+		bool transition_at_answer = false;
 		bool answer_for_current_question_received = false;
 		vector<VisMode> vis_mode_order{VisMode::ZOOMED_OUT, VisMode::WEBSERVER, VisMode::USER, VisMode::USER_GRID, VisMode::FTRACE, VisMode::WEBSERVER, VisMode::TEXT_DEMO};
 		VisMode idle_vis_mode = VisMode::FTRACE;
 		bool idle_mode_on = false;
 		int vis_mode_order_index = 0;
 		float next_transition_countdown = 0.0;
-		float time_per_vis = 45.0;
+		float time_per_vis = 65.0;
 		vector<Transition> transition_chain;
 
 		bool dac_connected_last_frame = false;
