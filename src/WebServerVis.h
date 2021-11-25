@@ -18,7 +18,7 @@ class WebServerVis {
     static std::unordered_map<std::string, size_t> node_action_map;
 
         int last_vis_mode;
-        WebServerVisMode vis_mode = WebServerVisMode::LINES;
+        WebServerVisMode vis_mode = WebServerVisMode::CIRCLE;
         vector<float> activity;
         vector<float> activity_smoothed;
         vector<int> activity_received; // tracks the number of frames since activity was received
@@ -152,11 +152,11 @@ class WebServerVis {
                 last_y = y;
                 last_value = value;
                 // poly.addVertex(x, y, 0);
-                if( mix < 1.0/oversampling ) {
-                    if(activity_received[down_i] > 0) {
-                        laser.drawLine(0, 0, x, y, col, profile);
-                    }
-                }
+                // if( mix < 1.0/oversampling ) {
+                //     if(activity_received[down_i] > 0) {
+                //         laser.drawLine(0, 0, x, y, col, profile);
+                //     }
+                // }
             }
             laser.drawPoly(poly, col, profile);
                     break;
