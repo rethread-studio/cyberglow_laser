@@ -27,7 +27,9 @@ class WebServerVis {
         ofColor color = ofColor::green;
         int dot_frames_to_cross = 30;
 
-        WebServerVis() {
+        WebServerVis() {}
+
+        WebServerVis(int height) {
             // init
             if(node_action_map.size() == 0) {
             }
@@ -39,6 +41,7 @@ class WebServerVis {
             activity_received = vector<int>(17, 0.0);
             activity_received_dots = vector<vector<int>>(17, vector<int>());
             last_vis_mode = static_cast<int>(WebServerVisMode::LAST);
+            radius = height * 0.4;
         }
 
         void register_node(string action) {

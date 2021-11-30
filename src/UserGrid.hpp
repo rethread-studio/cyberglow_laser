@@ -97,7 +97,7 @@ class UserData {
 #ifdef DEBUG_MODE
                 const float intensity = 1.;
 #else
-                const float intensity = 0.1;
+                const float intensity = 0.05;
                 #endif
                 ofColor color = ofColor::red;
                 laser.drawDot(x, y , color, intensity, OFXLASER_PROFILE_DEFAULT);

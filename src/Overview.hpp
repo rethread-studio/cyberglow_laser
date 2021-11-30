@@ -16,13 +16,13 @@ class Overview {
 
         Overview() {}
 
-        Overview(glm::vec2 triangle_positions_[3]) {
+        Overview(glm::vec2 triangle_positions_[3], int height) {
 
             for(int i = 0; i < 3; i++) {
                 triangle_positions[i] = triangle_positions_[i];
             }
             LaserTextOptions options;
-            options.size = 40.0;
+            options.size = height * 0.04;
             options.color = ofColor(255, 0, 255);
             glm::vec2 o = glm::vec2(-10, 10);
             location_texts.push_back(LaserText("VISUALISATION", options, 4, triangle_positions[TriangleVIS]+o));

@@ -19,7 +19,7 @@ class TextFlow {
 
         TextFlow(int width, int height) {
             options = LaserTextOptions();
-            options.size = 40.0;
+            options.size = height*0.04;
             options.color = ofColor::red;
 
             int num_y = height/(options.size*2) - 1;
