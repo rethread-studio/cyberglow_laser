@@ -9,7 +9,7 @@ class TextFlow {
     public:
         vector<LaserText> texts;
         LaserTextOptions options;
-        float velocity = 18.0;
+        float velocity = 4.0;
         int max_num_texts = 11;
         // scrambled list of y positions to distribute messages equally across the y
         vector<float> y_options;
@@ -19,7 +19,7 @@ class TextFlow {
 
         TextFlow(int width, int height) {
             options = LaserTextOptions();
-            options.size = height*0.04;
+            options.size = height*0.06;
             options.color = ofColor::red;
 
             int num_y = height/(options.size*2) - 1;

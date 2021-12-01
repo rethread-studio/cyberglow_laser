@@ -228,7 +228,7 @@ class ofApp : public ofBaseApp{
 		bool transition_at_new_question = false;
 		bool transition_at_answer = false;
 		bool answer_for_current_question_received = false;
-		vector<VisMode> vis_mode_order{VisMode::ZOOMED_OUT, VisMode::WEBSERVER, VisMode::USER, VisMode::USER_GRID, VisMode::FTRACE, VisMode::WEBSERVER, VisMode::TEXT_DEMO};
+		vector<VisMode> vis_mode_order{VisMode::ZOOMED_OUT, VisMode::WEBSERVER, VisMode::USER_GRID, VisMode::FTRACE, VisMode::WEBSERVER, VisMode::TEXT_DEMO, VisMode::FTRACE_RISING};
 		VisMode idle_vis_mode = VisMode::FTRACE;
 		bool idle_mode_on = false;
 		int vis_mode_order_index = 0;

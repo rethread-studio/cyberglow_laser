@@ -217,7 +217,7 @@ void ofApp::addRandomActivityPoint() {
     glm::vec2 position = triangle_positions[tri] - glm::vec2(cos(offset_angle) * offset, sin(offset_angle) * offset);
     // Velocity out from center point
     float vel_angle = offset_angle + PI;
-    float vel_amp = ofRandom(0.5, 4.0);
+    float vel_amp = ofRandom(0.5, 4.0) * 0.2;
     glm::vec2 vel = glm::vec2(cos(vel_angle) * vel_amp, sin(vel_angle) * vel_amp);
     auto ap = ActivityPoint(position, vel, ofColor::green);
     // Velocity towards neighbouring point
@@ -267,7 +267,7 @@ void ofApp::addActivityPoint(int source) {
             destination = triangle_positions[1];
             break;
     }
-    float vel_amp = ofRandom(0.5, 4.0);
+    float vel_amp = ofRandom(0.5, 4.0) * 0.5;
     ap.launch_towards(destination, vel_amp);
     ap.grow(ofRandom(0.0, 0.5));
     activity_points.push_back(ap);
