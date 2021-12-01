@@ -148,4 +148,9 @@ It seems like the maximum dot intensity is approximately 1.0 / (number_of_dots *
 
 * Documentation
 
-** TODO Replace stills with short videos/gifs on the about page
+** DONE Replace stills with short videos/gifs on the about page
+
+* Installation
+
+** TODO Testbild på låg ljusstyrka vid start
+Övergår sedan manuellt till display

@@ -267,7 +267,7 @@ void ofApp::addActivityPoint(int source) {
             destination = triangle_positions[1];
             break;
     }
-    float vel_amp = ofRandom(0.5, 4.0) * 0.5;
+    float vel_amp = ofRandom(1.2, 2.0);
     ap.launch_towards(destination, vel_amp);
     ap.grow(ofRandom(0.0, 0.5));
     activity_points.push_back(ap);

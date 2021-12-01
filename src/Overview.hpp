@@ -22,11 +22,11 @@ class Overview {
                 triangle_positions[i] = triangle_positions_[i];
             }
             LaserTextOptions options;
-            options.size = height * 0.04;
+            options.size = height * 0.08;
             options.color = ofColor(255, 0, 255);
             glm::vec2 o = glm::vec2(-10, 10);
             location_texts.push_back(LaserText("VISUALISATION", options, 4, triangle_positions[TriangleVIS]+o));
-            location_texts.push_back(LaserText("SERVER", options, 3, triangle_positions[TriangleSERVER]+o));
+            location_texts.push_back(LaserText("SERVER", options, 3, triangle_positions[TriangleSERVER]+o+glm::vec2(0, 50)));
             location_texts.push_back(LaserText("USER", options, 3, triangle_positions[TriangleUSER]+o));
 
             for(auto& text : location_texts) {
