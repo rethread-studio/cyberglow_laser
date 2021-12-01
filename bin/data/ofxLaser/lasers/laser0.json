@@ -1,6 +1,6 @@
 {
     "0": {
-        "Brightness": "0.1",
+        "Brightness": "1",
         "Colour_calibration": {
             "blue_0": "0",
             "blue_100": "0.38",
@@ -34,7 +34,7 @@
             "Output_position_offset": "0, 0",
             "Output_rotation": "0",
             "Points_per_second": "24000",
-            "Speed": "1.05"
+            "Speed": "0.55"
         },
         "Scanner_settings": {
             "Hold_off_after": "1",
