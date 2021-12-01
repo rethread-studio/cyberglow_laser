@@ -9,29 +9,22 @@ void ofApp::setup(){
 
     // No need to set anything up with the laser manager, it's all done automatically
     // Change canvas size
-    laser.setCanvasSize(width, height);
+    laser.setCanvasSize(width*1.5, height*1.5);
 
     // Set up triangle positions
     triangle_positions[0] = glm::vec2(width * 0.3 - halfw, height * 0.85 - halfh); // visualisation
     triangle_positions[1] = glm::vec2(width * 0.5 - halfw, height * 0.15 - halfh); // server
     triangle_positions[2] = glm::vec2(width * 0.7 - halfw, height * 0.85 - halfh); // user
 
-    for(int i = 0; i < 3; i++) {
-        event_line_columns.push_back(EventLineColumn(glm::vec2(i*(width/3) - halfw, -halfh), width/3, height));
-    }
-
+    web_server_vis = WebServerVis(height);
     user_grid = UserGrid(width, height);
-    overview = Overview(triangle_positions);
+    overview = Overview(triangle_positions, height);
     text_flow = TextFlow(width, height);
     transition.type = TransitionType::NONE; // disable the transition at startup
     ftrace_rising_vis = FtraceVis(true);
 
-    auto text_options = LaserTextOptions();
-    text_options.size = 80.0;
-    text_options.color = ofColor::red;
-
-    laser_texts.push_back(LaserText("ABCDEFGHIJKLMNOPQ", text_options, 5, glm::vec2(width * 0.05 - halfw, height * 0.5 - halfh)));
-    laser_texts.push_back(LaserText("RSTUVXY0123456789", text_options, 5, glm::vec2(width * 0.05 - halfw, height * 0.2 - halfh)));
+    // laser_texts.push_back(LaserText("ABCDEFGHIJKLMNOPQ", text_options, 5, glm::vec2(width * 0.05 - halfw, height * 0.5 - halfh)));
+    // laser_texts.push_back(LaserText("RSTUVXY0123456789", text_options, 5, glm::vec2(width * 0.05 - halfw, height * 0.2 - halfh)));
     // laser_texts.push_back(LaserText("MOVE OPEN FILE", text_options, 4, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh + (text_options.size * 2))));
 
     laser.update();
@@ -148,10 +141,7 @@ void ofApp::update(){
         } else {
             pickRandomPlayerTrail();
         }
-        //Update event line columns
-        for(auto& elc : event_line_columns) {
-            elc.update();
-        }
+
         web_server_vis.update();
     }
     // prepares laser manager to receive new graphics
@@ -162,7 +152,7 @@ void ofApp::update(){
 void ofApp::draw(){
 
     ofPushMatrix();
-    ofTranslate(halfw, halfh, 0.0);
+    ofTranslate(halfw*1.5, halfh*1.5, 0.0);
     // ofRotateRad(rot_x * 0.5, 0.0, 1.0, 0.0);
     // ofRotateRad(rot_y * 0.5, 1.0, 0.0, 0.0);
     // Draw using
@@ -174,7 +164,7 @@ void ofApp::draw(){
     // Translating the coordinate system also works
 
     if(transition.active()) {
-        if((transition.from_vis != VisMode::ZOOMED_OUT || transition.phase < 0.65)
+        if((transition.from_vis != VisMode::ZOOMED_OUT || transition.phase < 0.6)
            && (transition.to_vis != VisMode::ZOOMED_OUT || transition.phase < 0.45)
         ) {
             ofPushMatrix();
@@ -182,7 +172,10 @@ void ofApp::draw(){
             drawVisualisation(transition.from_vis, 1.0);
             ofPopMatrix();
         }
-        if(transition.from_vis != VisMode::ZOOMED_OUT || transition.phase > 0.25) {
+        if((transition.from_vis != VisMode::ZOOMED_OUT || transition.phase > 0.35)
+            && (transition.to_vis != VisMode::TEXT_DEMO || transition.phase > 0.4)
+            && (transition.to_vis != VisMode::USER_GRID || transition.phase > 0.35)
+            ) {
             ofPushMatrix();
             transition.applyTransitionTo();
             drawVisualisation(transition.to_vis, 1.0);
@@ -539,16 +532,14 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
             // draw triangle positions
             float intensity = 0.2;
             for(size_t i = 0; i < 3; i++) {
-                laser.drawDot(triangle_positions[i].x * scale, triangle_positions[i].y * scale, ofColor::blue, intensity, OFXLASER_PROFILE_FAST);
+                // laser.drawDot(triangle_positions[i].x * scale, triangle_positions[i].y * scale, ofColor::blue, intensity, OFXLASER_PROFILE_FAST);
                 float radius = powf(triangle_activity[i], 0.5) * height * 0.08 + 10;
                 if(transition.active()) {
                     radius = 15.0;
                 }
                 laser.drawCircle(triangle_positions[i].x , triangle_positions[i].y, radius, ofColor::blue, OFXLASER_PROFILE_FAST);
             }
-            // for(auto& elc : event_line_columns) {
-            //     elc.draw(laser, scan_x, scan_width);
-            // }
+
             // overview.draw_symbols(laser);
             if(!transition.active()) {
                 overview.draw_text(laser);

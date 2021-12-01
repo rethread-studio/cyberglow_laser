@@ -11,7 +11,6 @@
 #include "ofxOsc.h"
 #include "ofxLaserManager.h"
 #include "ActivityPoint.hpp"
-#include "EventLine.hpp"
 #include "LaserText.hpp"
 #include "TextFlow.hpp"
 #include "PlayerTrail.hpp"
@@ -24,13 +23,13 @@
 
 enum class VisMode {
 WEBSERVER = 0,
-USER,
 USER_GRID,
 ZOOMED_OUT,
 TEXT_DEMO,
 FTRACE,
 FTRACE_RISING,
 LAST,
+USER,
 };
 
 enum class TransitionType {
@@ -200,7 +199,6 @@ class ofApp : public ofBaseApp{
 		float triangle_activity[3];
 		vector<ActivityPoint> activity_points;
 		size_t max_num_activity_points = 20;
-		vector<EventLineColumn> event_line_columns;
 		unordered_map<string, PlayerTrail> player_trails;
 		FtraceVis ftrace_vis;
 		FtraceVis ftrace_rising_vis;
@@ -212,9 +210,9 @@ class ofApp : public ofBaseApp{
 		TextFlow text_flow;
 		string current_player_trail_id = "";
 		// Dimensions of the laser canvas
-		int width = 2000;
+		int width = 2000/5;
 		int halfw = width/2;
-		int height = 1000;
+		int height = 1000/5;
 		int halfh = height/2;
 
 		float scan_x = 0.0;
