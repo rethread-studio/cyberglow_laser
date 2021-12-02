@@ -12,9 +12,9 @@ void ofApp::setup(){
     laser.setCanvasSize(width*1.5, height*1.5);
 
     // Set up triangle positions
-    triangle_positions[0] = glm::vec2(width * 0.3 - halfw, height * 0.85 - halfh); // visualisation
+    triangle_positions[0] = glm::vec2(width * 0.05 - halfw, height * 0.85 - halfh); // visualisation
     triangle_positions[1] = glm::vec2(width * 0.5 - halfw, height * 0.15 - halfh); // server
-    triangle_positions[2] = glm::vec2(width * 0.7 - halfw, height * 0.85 - halfh); // user
+    triangle_positions[2] = glm::vec2(width * 0.95 - halfw, height * 0.85 - halfh); // user
 
     web_server_vis = WebServerVis(height);
     user_grid = UserGrid(width, height);
@@ -533,7 +533,7 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
             float intensity = 0.2;
             for(size_t i = 0; i < 3; i++) {
                 // laser.drawDot(triangle_positions[i].x * scale, triangle_positions[i].y * scale, ofColor::blue, intensity, OFXLASER_PROFILE_FAST);
-                float radius = powf(triangle_activity[i], 0.5) * height * 0.08 + 10;
+                float radius = powf(triangle_activity[i], 0.5) * height * 0.06 + 6;
                 if(transition.active()) {
                     radius = 15.0;
                 }

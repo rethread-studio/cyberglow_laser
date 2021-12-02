@@ -26,7 +26,7 @@ class Overview {
             options.color = ofColor(255, 0, 255);
             glm::vec2 o = glm::vec2(-10, 10);
             location_texts.push_back(LaserText("VISUALISATION", options, 4, triangle_positions[TriangleVIS]+o));
-            location_texts.push_back(LaserText("SERVER", options, 3, triangle_positions[TriangleSERVER]+o+glm::vec2(0, 50)));
+            location_texts.push_back(LaserText("SERVER", options, 3, triangle_positions[TriangleSERVER]+o));
             location_texts.push_back(LaserText("USER", options, 3, triangle_positions[TriangleUSER]+o));
 
             for(auto& text : location_texts) {
@@ -79,10 +79,12 @@ class Overview {
         void draw_text(ofxLaser::Manager &laser) {
             if(!finished_init) {
                 // location_texts[TriangleUSER].pos.x -= location_texts[TriangleUSER].get_width(laser) + 20;
-                location_texts[TriangleUSER].pos.x += 90;
-                location_texts[TriangleVIS].pos.x -= location_texts[TriangleVIS].get_width(laser) + 20;
+                location_texts[TriangleVIS].pos.x += 40;
+                location_texts[TriangleVIS].pos.y -= 20;
+                location_texts[TriangleUSER].pos.x -= location_texts[TriangleUSER].get_width(laser) + 20;
+                location_texts[TriangleUSER].pos.y -= 20;
                 location_texts[TriangleSERVER].pos.x -= location_texts[TriangleSERVER].get_width(laser) * 0.5;
-                location_texts[TriangleSERVER].pos.y -= 120;
+                location_texts[TriangleSERVER].pos.y -= 50;
                 finished_init = true;
             }
 
