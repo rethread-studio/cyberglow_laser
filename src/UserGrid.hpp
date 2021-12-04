@@ -21,7 +21,7 @@ NONE
 
 class UserData {
     public:
-        float event_lifetime = 1.0; // in seconds
+        float event_lifetime = 0.8; // in seconds
         vector<pair<UserEvent, float>> events;
         float time_since_last_event = 0.0;
         glm::vec2 position;
@@ -91,9 +91,10 @@ class UserData {
             // laser.drawLine(glm::vec2(position.x+w, position.y-y_up), glm::vec2(position.x+w, position.y+h), color, OFXLASER_PROFILE_FAST);
             // grid or circle?
             for( auto& ep : events ) {
-                int event_index = static_cast<int>(ep.second);
+                int event_index = static_cast<int>(ep.first);
                 float x = (event_index % events_x) * (w/float(events_x)) + position.x;
                 float y = floor(float(event_index)/float(events_x)) * (h/float(events_y)) + position.y;
+                // cout << "drawing event " << event_index << " at " << x << ", " << y << endl;
 #ifdef DEBUG_MODE
                 const float intensity = 1.;
 #else
@@ -120,12 +121,12 @@ class UserGrid {
         UserGrid() {}
         UserGrid(int width, int height) {
             // make the canvas smaller to save laser time
-            width *= 0.5;
-            height *= 0.5;
+            width *= 0.75;
+            height *= 0.75;
             cell_w = float(width)/float(cells_x);
             cell_h = float(height)/float(cells_y);
-            start_x = float(width)/-2.0;
-            start_y = float(height)/-2.0;
+            start_x = float(width)*-0.5;
+            start_y = float(height)*-0.5;
         }
         void update(float dt) {
             vector<decltype(user_datas)::key_type> keys_to_delete;
@@ -141,7 +142,7 @@ class UserGrid {
         }
         void draw(ofxLaser::Manager &laser) {
             for(auto& ud : user_datas) {
-                ud.second.draw(laser, cell_w * 0.5, cell_h * 0.8);
+                ud.second.draw(laser, cell_w * 0.7, cell_h * 0.8);
             }
         }
         void register_event(string action, string arguments) {
@@ -158,7 +159,7 @@ class UserGrid {
             if(ud != user_datas.end()) {
                 ud->second.register_event(action, arguments);
             } else {
-                float x = (current_cell % cells_x) * cell_w + start_x;
+                float x = float(current_cell % cells_x) * cell_w + start_x;
                 float y = floor(float(current_cell)/float(cells_x)) * cell_h + start_y;
                 current_cell = (current_cell + cell_jump) % (cells_x * cells_y);
                 auto ud = UserData(glm::vec2(x, y));

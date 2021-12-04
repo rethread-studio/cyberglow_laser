@@ -346,12 +346,16 @@ void ofApp::checkOscMessages() {
                 auto arg = m.getArgAsString(0);
                 if(arg == "on") {
                     idle_mode_on = true;
-                    transition_chain.clear();
-                    transitionToFrom(vis_mode, idle_vis_mode);
+                    if(automatic_transitions) {
+                        transition_chain.clear();
+                        transitionToFrom(vis_mode, idle_vis_mode);
+                    }
                 } else {
                     // off
                     idle_mode_on = false;
-                    transitionToFrom(idle_vis_mode, VisMode::ZOOMED_OUT);
+                    if(automatic_transitions) {
+                        transitionToFrom(idle_vis_mode, VisMode::ZOOMED_OUT);
+                    }
                 }
             }
             else

@@ -25,12 +25,13 @@ class Overview {
             options.size = height * 0.08;
             options.color = ofColor(255, 0, 255);
             glm::vec2 o = glm::vec2(-10, 10);
-            location_texts.push_back(LaserText("VISUALISATION", options, 4, triangle_positions[TriangleVIS]+o));
-            location_texts.push_back(LaserText("SERVER", options, 3, triangle_positions[TriangleSERVER]+o));
-            location_texts.push_back(LaserText("USER", options, 3, triangle_positions[TriangleUSER]+o));
+            location_texts.push_back(LaserText("SYSTEM", options, 4, triangle_positions[TriangleVIS]+o));
+            location_texts.push_back(LaserText("SERVER", options, 4, triangle_positions[TriangleSERVER]+o));
+            location_texts.push_back(LaserText("USER", options, 4, triangle_positions[TriangleUSER]+o));
 
             for(auto& text : location_texts) {
-                text.offFrames = 12;
+                text.offFrames = 10;
+                text.framesPerChar = 10;
             }
         }
 
