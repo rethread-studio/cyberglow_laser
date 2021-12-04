@@ -233,7 +233,7 @@ class ofApp : public ofBaseApp{
 		bool idle_mode_on = false;
 		int vis_mode_order_index = 0;
 		float next_transition_countdown = 0.0;
-		float time_per_vis = 90.0;
+		float time_per_vis = 60.0;
 		vector<Transition> transition_chain;
 
 		bool dac_connected_last_frame = false;
