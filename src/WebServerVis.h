@@ -5,9 +5,9 @@
 #include "ofxLaserManager.h"
 
 enum class WebServerVisMode {
-CIRCLE = 0,
-DOT,
+DOT = 0,
 LAST,
+CIRCLE,
 LINES,
 LINES_ONOFF, // It's a bit too intense
 };
