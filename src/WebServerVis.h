@@ -18,7 +18,7 @@ class WebServerVis {
     static std::unordered_map<std::string, size_t> node_action_map;
 
         int last_vis_mode;
-        WebServerVisMode vis_mode = WebServerVisMode::CIRCLE;
+        WebServerVisMode vis_mode = WebServerVisMode::DOT;
         vector<float> activity;
         vector<float> activity_smoothed;
         vector<int> activity_received; // tracks the number of frames since activity was received
