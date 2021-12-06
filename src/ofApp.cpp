@@ -165,7 +165,7 @@ void ofApp::draw(){
 
     if(transition.active()) {
         if((transition.from_vis != VisMode::ZOOMED_OUT || transition.phase < 0.6)
-           && (transition.to_vis != VisMode::ZOOMED_OUT || transition.phase < 0.45)
+           && (transition.to_vis != VisMode::ZOOMED_OUT || transition.phase < 0.55)
         ) {
             ofPushMatrix();
             transition.applyTransitionFrom();
@@ -342,7 +342,7 @@ void ofApp::checkOscMessages() {
             }
 
             else if(m.getAddress() == "/idle") {
-                // cout << "/idle: " << m.getArgAsString(0) << endl;
+                cout << "/idle: " << m.getArgAsString(0) << endl;
                 auto arg = m.getArgAsString(0);
                 if(arg == "on") {
                     idle_mode_on = true;
@@ -354,7 +354,7 @@ void ofApp::checkOscMessages() {
                     // off
                     idle_mode_on = false;
                     if(automatic_transitions) {
-                        transitionToFrom(idle_vis_mode, VisMode::ZOOMED_OUT);
+                        transitionToFrom(vis_mode, VisMode::ZOOMED_OUT);
                     }
                 }
             }
@@ -534,9 +534,11 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
         case VisMode::ZOOMED_OUT:
         {
             // draw triangle positions
-            float intensity = 0.2;
+            float intensity = 1.0;
             for(size_t i = 0; i < 3; i++) {
-                // laser.drawDot(triangle_positions[i].x * scale, triangle_positions[i].y * scale, ofColor::blue, intensity, OFXLASER_PROFILE_FAST);
+                if(transition.active()) {
+                    laser.drawDot(triangle_positions[i].x * scale, triangle_positions[i].y * scale, ofColor::blue, intensity, OFXLASER_PROFILE_FAST);
+                }
                 float radius = powf(triangle_activity[i], 0.5) * height * 0.06 + 6;
                 if(transition.active()) {
                     radius = 15.0;

@@ -44,7 +44,7 @@ class EventStats {
             // if(time_since_last_event < 0.5) {
             if(time_since_trigger < dot_on_time) {
                 float angle = -PI + event_num*0.45;
-                float radius = 100.0 + (event_num % 16) * 23.5;
+                float radius = 40.0 + (event_num % 16) * 23.5 * 0.3;
                 float x = cos(angle) * radius;
                 float y = sin(angle) * radius;
 #ifdef DEBUG_MODE
