@@ -1,6 +1,4 @@
-ofxOpenCv
 ofxNetwork
-ofxPoco
-ofxSvg
-ofxLaser
+ofxOpenCv
 ofxOsc
+ofxPoco
