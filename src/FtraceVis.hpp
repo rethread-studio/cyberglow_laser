@@ -3,6 +3,10 @@
 
 #include "constants.h"
 #include "ofMain.h"
+#include "ofxFastParticleSystem.h"
+
+#define POSITION_TEXTURE 0
+#define COLOR_TEXTURE 1
 
 class EventStats {
 public:
@@ -74,23 +78,86 @@ public:
 };
 
 class FtraceVis {
-public:
-  ofColor color = ofColor::blue;
-  map<string, EventStats> event_stats;
-  bool rising = false;
-  bool category_colors = false; // TODO
-  float dot_on_time = 0.05;
+  public:
 
-  FtraceVis(bool rising) : rising(rising) {
+    ofColor color = ofColor::blue;
+    map<string, EventStats> event_stats;
+    bool rising = false;
+    bool category_colors = false; // TODO
+    float dot_on_time = 0.05;
+
+    ofFbo fboScreen;
+    FastParticleSystem particles;
+    ofEasyCam* cam;
+
+    float timestep = 0.005;
+
+    float cameraDist        = 20.0;
+    float cameraRotation    = 0.0;
+    float rotAmount         = 0.005;
+
+    int num_triggered = 0;
+    int trigger_start_id = 0;
+    int total_num_particles = 0;
+
+  FtraceVis(bool rising, int width, int height) : rising(rising) {
     if (rising) {
       dot_on_time = 1.0;
     } else {
       dot_on_time = 0.05;
     }
+    // init fbo
+    fboScreen.allocate(width, height, GL_RGB);
+    fboScreen.begin();
+    ofClear(0.0);
+    fboScreen.end();
+
+    // init camera for particle system
+
+    cam = new ofEasyCam();
+    cam->rotateDeg(-90, ofVec3f(1.0,0.0, 0.0));
+    cam->setDistance(cameraDist);
+
+    cam->setNearClip(0.1);
+    cam->setFarClip(200000);
+
+    // init particle system
+    unsigned w = 1920;
+    unsigned h = 1080;
+    unsigned d = 5;
+
+    total_num_particles = w*h;
+
+    float* particlesPosns = new float [w * h  * 4];
+    particles.init(w, h, ofPrimitiveMode::OF_PRIMITIVE_POINTS, 2);
+
+    // random offset for particle's initial position
+    // different attractors works better with different starting offset positions
+    float startOffset = 10.0;//1.5;
+
+    for (unsigned y = 0; y < h; y++){
+        for(unsigned x = 0; x < w; x++){
+            unsigned idx = y * w + x;
+
+            particlesPosns[idx * 4] =    ofRandom(-startOffset, startOffset);
+            particlesPosns[idx * 4 +1] = ofRandom(-startOffset, startOffset);
+            particlesPosns[idx * 4 +2] = ofRandom(-startOffset, startOffset);
+            particlesPosns[idx * 4 +3] = 0;
+        }
+    }
+
+    particles.loadDataTexture(POSITION_TEXTURE, particlesPosns);
+    delete[] particlesPosns;
+
+    particles.zeroDataTexture(COLOR_TEXTURE);
+
+    particles.addUpdateShader("shaders/updateParticle");
+    particles.addDrawShader("shaders/drawParticle");
   }
-  FtraceVis() : FtraceVis(false) {}
+  FtraceVis() : FtraceVis(false, 1920, 1080) {}
 
   void register_event(string event) {
+    trigger_particle();
     // process;timestamp;event;pid?;cpu?
     // event type until ' ' or '()'
     string event_copy = event;
@@ -152,10 +219,41 @@ public:
     }
   }
 
-  void update(float dt) {
-    for (auto &es : event_stats) {
-      es.second.update(dt);
+    void trigger_particle() {
+        num_triggered += 1;
+        if(trigger_start_id + num_triggered > total_num_particles) {
+          trigger_start_id = 0;
+          cout << "Overshot total number of particles" << endl;
+        }
     }
+
+    void update(float dt) {
+      for (auto &es : event_stats) {
+        es.second.update(dt);
+      }
+
+    cout << "num triggered: " << num_triggered << endl;
+    cam->lookAt(ofVec3f(0.0, 0.0, 0.0));
+    cam->setPosition(cameraDist*sin(cameraRotation),
+                    0.0,
+                    cameraDist*cos(cameraRotation));
+
+    cameraRotation += rotAmount;
+
+    ofShader &shader = particles.getUpdateShader();
+    shader.begin();
+
+
+    shader.setUniform1f("timestep", timestep);
+    shader.setUniform1i("num_triggered", num_triggered);
+    shader.setUniform1i("trigger_start_id", trigger_start_id);
+
+    trigger_start_id += num_triggered;
+    num_triggered = 0;
+
+    shader.end();
+
+    particles.update();
   }
 
   void draw(int width, int height) {
@@ -170,6 +268,38 @@ public:
         es.second.draw_dot();
       }
     }
+
+
+    ofPushMatrix();
+    fboScreen.begin();
+    ofClear(0, 0, 0);
+    ofBackground(0, 0, 0);
+
+    ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+
+    glEnable(GL_PROGRAM_POINT_SIZE);
+
+    cam->begin();
+
+
+    //debug box drawing
+    // ofSetColor(0, 255, 0);
+    // ofFill();
+    // ofDrawBox(ofPoint(0.0, 0, 0), 10);
+
+    ofShader &shader = particles.getDrawShader();
+    shader.begin();
+    shader.setUniformMatrix4f("modelViewProjectionMatrix", cam->getModelViewProjectionMatrix());
+    shader.end();
+    particles.draw();
+    ofDisableBlendMode();
+
+    cam->end();
+    fboScreen.end();
+    ofPopMatrix();
+
+    ofSetColor(255);
+    fboScreen.draw(width*-0.5, height*-0.5, width, height);
   }
 };
 

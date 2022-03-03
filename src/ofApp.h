@@ -178,7 +178,7 @@ public:
   void transitionToFrom(VisMode from, VisMode to);
   Transition getTransitionToFrom(VisMode from, VisMode to);
 
-  VisMode vis_mode = VisMode::WEBSERVER;
+  VisMode vis_mode = VisMode::FTRACE;
   Transition transition;
   bool is_paused =
       false; // When paused, the image should be static (for photography)
@@ -212,12 +212,12 @@ public:
   float rot_y = 0.0;
   float rot_x = 0.0;
 
-  bool automatic_transitions = true;
+  bool automatic_transitions = false;
   bool use_fixed_order_transitions = true;
   bool transition_at_new_question = false;
   bool transition_at_answer = false;
   bool answer_for_current_question_received = false;
-  vector<VisMode> vis_mode_order{VisMode::ZOOMED_OUT, VisMode::WEBSERVER,
+  vector<VisMode> vis_mode_order{VisMode::FTRACE, VisMode::ZOOMED_OUT,
                                  VisMode::USER,       VisMode::USER_GRID,
                                  VisMode::FTRACE,     VisMode::WEBSERVER,
                                  VisMode::TEXT_DEMO};
@@ -232,7 +232,7 @@ public:
 
   // **************** OSC ****************
   ofxOscReceiver receiver;
-  int PORT = 57130;
+  int PORT = 57131;
   void checkOscMessages();
   void parseOscMessage(string origin, string action, string arguments);
 };

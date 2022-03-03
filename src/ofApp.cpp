@@ -24,7 +24,7 @@ void ofApp::setup() {
   overview = Overview(triangle_positions);
   text_flow = TextFlow(width, height);
   transition.type = TransitionType::NONE; // disable the transition at startup
-  ftrace_rising_vis = FtraceVis(true);
+  ftrace_rising_vis = FtraceVis(true, width, height);
 
   auto text_options = LaserTextOptions();
   text_options.size = 80.0;
@@ -68,10 +68,10 @@ void ofApp::update() {
     transition.update(dt);
 
     // For some visualisations, transition to self automatically
-    if (!transition.active() && transition_chain.size() == 0 &&
-        (vis_mode == VisMode::FTRACE)) {
-      transitionToFrom(vis_mode, vis_mode);
-    }
+    // if (!transition.active() && transition_chain.size() == 0 &&
+    //     (vis_mode == VisMode::FTRACE)) {
+    //   transitionToFrom(vis_mode, vis_mode);
+    // }
 
     overview.update();
 
@@ -132,6 +132,8 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
+
+  ofBackground(0);
 
   ofPushMatrix();
   ofTranslate(halfw, halfh, 0.0);
