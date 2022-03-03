@@ -18,5 +18,5 @@ void main(){
     
     vertColor = vec4(time, pow(time, 3.0), 0.1, pow(time, 2.0)*0.8);
     
-    gl_PointSize = 2.0;
+    gl_PointSize = 1.0;
 }
