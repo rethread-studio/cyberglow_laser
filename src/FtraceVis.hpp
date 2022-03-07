@@ -8,6 +8,8 @@
 #define POSITION_TEXTURE 0
 #define COLOR_TEXTURE 1
 
+static const float TIMESTEP = 0.3;
+
 class EventStats {
 public:
   int num_occurrences = 0;
@@ -77,6 +79,85 @@ public:
   }
 };
 
+class FtraceParticleController {
+    int num_triggered = 0;
+    int trigger_start_id = 0;
+    int total_num_particles = 0;
+    FastParticleSystem particles;
+  public:
+    void init(string suffix) {
+
+      // init particle system
+      unsigned w = 1920;
+      unsigned h = 1080;
+      unsigned d = 5;
+
+      total_num_particles = w*h;
+
+      float* particlesPosns = new float [w * h  * 4];
+      particles.init(w, h, ofPrimitiveMode::OF_PRIMITIVE_POINTS, 2);
+
+      // random offset for particle's initial position
+      // different attractors works better with different starting offset positions
+      float startOffset = 10.0;//1.5;
+
+      for (unsigned y = 0; y < h; y++){
+        for(unsigned x = 0; x < w; x++){
+          unsigned idx = y * w + x;
+
+          // particlesPosns[idx * 4] =    ofRandom(-startOffset, startOffset);
+          // particlesPosns[idx * 4 +1] = ofRandom(-startOffset, startOffset);
+          // particlesPosns[idx * 4 +2] = ofRandom(-startOffset, startOffset);
+          // particlesPosns[idx * 4 +3] = 0;
+          particlesPosns[idx * 4] =   float(x*20)/float(w/2);
+          particlesPosns[idx * 4 +1] = float(y*20)/float(h/2);
+          particlesPosns[idx * 4 +2] = 0;
+          particlesPosns[idx * 4 +3] = 0;
+        }
+      }
+
+      particles.loadDataTexture(POSITION_TEXTURE, particlesPosns);
+      delete[] particlesPosns;
+
+      particles.zeroDataTexture(COLOR_TEXTURE);
+
+      particles.addUpdateShader("shaders/"+suffix+"/updateParticle");
+      particles.addDrawShader("shaders/"+suffix+"/drawParticle");
+    }
+
+    void trigger_particle() {
+        num_triggered += 1;
+        if(trigger_start_id + num_triggered > total_num_particles) {
+          trigger_start_id = 0;
+          cout << "Overshot total number of particles" << endl;
+        }
+    }
+
+    void update(float dt) {
+
+      ofShader &shader = particles.getUpdateShader();
+      shader.begin();
+
+      shader.setUniform1f("timestep", TIMESTEP * dt);
+      shader.setUniform1i("num_triggered", num_triggered);
+      shader.setUniform1i("trigger_start_id", trigger_start_id);
+
+      trigger_start_id += num_triggered;
+      num_triggered = 0;
+
+      shader.end();
+
+      particles.update();
+    }
+    void draw(glm::mat4 modelViewProjectionMatrix) {
+      ofShader &shader = particles.getDrawShader();
+      shader.begin();
+      shader.setUniformMatrix4f("modelViewProjectionMatrix", modelViewProjectionMatrix);
+      shader.end();
+      particles.draw();
+    }
+};
+
 class FtraceVis {
   public:
 
@@ -87,18 +168,18 @@ class FtraceVis {
     float dot_on_time = 0.05;
 
     ofFbo fboScreen;
-    FastParticleSystem particles;
     ofEasyCam* cam;
 
-    float timestep = 0.005;
+    FtraceParticleController fpc_random;
+    FtraceParticleController fpc_syscall;
+    FtraceParticleController fpc_tcp;
+    FtraceParticleController fpc_irq;
 
-    float cameraDist        = 20.0;
+
+    float cameraDist        = 30.0;
     float cameraRotation    = 0.0;
     float rotAmount         = 0.005;
 
-    int num_triggered = 0;
-    int trigger_start_id = 0;
-    int total_num_particles = 0;
 
   FtraceVis(bool rising, int width, int height) : rising(rising) {
     if (rising) {
@@ -121,66 +202,19 @@ class FtraceVis {
     cam->setNearClip(0.1);
     cam->setFarClip(200000);
 
-    // init particle system
-    unsigned w = 1920;
-    unsigned h = 1080;
-    unsigned d = 5;
+    // init FtraceParticleControlllers
+    fpc_syscall.init("syscall");
+    fpc_random.init("random");
 
-    total_num_particles = w*h;
-
-    float* particlesPosns = new float [w * h  * 4];
-    particles.init(w, h, ofPrimitiveMode::OF_PRIMITIVE_POINTS, 2);
-
-    // random offset for particle's initial position
-    // different attractors works better with different starting offset positions
-    float startOffset = 10.0;//1.5;
-
-    for (unsigned y = 0; y < h; y++){
-        for(unsigned x = 0; x < w; x++){
-            unsigned idx = y * w + x;
-
-            particlesPosns[idx * 4] =    ofRandom(-startOffset, startOffset);
-            particlesPosns[idx * 4 +1] = ofRandom(-startOffset, startOffset);
-            particlesPosns[idx * 4 +2] = ofRandom(-startOffset, startOffset);
-            particlesPosns[idx * 4 +3] = 0;
-        }
-    }
-
-    particles.loadDataTexture(POSITION_TEXTURE, particlesPosns);
-    delete[] particlesPosns;
-
-    particles.zeroDataTexture(COLOR_TEXTURE);
-
-    particles.addUpdateShader("shaders/updateParticle");
-    particles.addDrawShader("shaders/drawParticle");
   }
   FtraceVis() : FtraceVis(false, 1920, 1080) {}
 
-  void register_event(string event) {
-    trigger_particle();
+  void register_event(string ftrace_kind) {
+    trigger_particle(ftrace_kind);
     // process;timestamp;event;pid?;cpu?
     // event type until ' ' or '()'
-    string event_copy = event;
-    vector<string> tokens;
-    string delimiter = ";";
-    auto i = event.find(delimiter);
-    while (i != string::npos) {
-      tokens.push_back(event.substr(0, i));
-      event.erase(0, i + delimiter.size());
-      i = event.find(delimiter);
-    }
-    tokens.push_back(event); // add the last token
 
-    string event_type;
-    i = tokens[2].find("(");
-    if (i != string::npos) {
-      event_type = tokens[2].substr(0, i);
-    } else {
-      i = tokens[2].find(" ");
-      event_type = tokens[2].substr(0, i);
-    }
-
-    auto es = event_stats.find(event_type);
+    auto es = event_stats.find(ftrace_kind);
     if (es != event_stats.end()) {
       es->second.register_event();
     } else {
@@ -188,22 +222,17 @@ class FtraceVis {
       // << endl;
       EventStats e = EventStats(event_stats.size());
       string event_prefix;
-      i = event_type.find("_");
-      if (i != string::npos) {
-        event_prefix = event_type.substr(0, i);
-      }
       // Set color of event based on its type
-      if (event_prefix == "random" || event_prefix == "dd" ||
-          event_prefix == "redit") {
+      if (ftrace_kind == "Random") {
         // random type
         e.color = ofColor::red;
-      } else if (event_prefix == "ys") {
+      } else if (ftrace_kind == "Syscall") {
         // syscall type
         e.color = ofColor::white;
-      } else if (event_prefix == "cp") {
+      } else if (ftrace_kind == "Tcp") {
         // tcp type
         e.color = ofColor::green;
-      } else if (event_prefix == "ix") {
+      } else if (ftrace_kind == "IrqMatrix") {
         // irq_matrix type
         e.color = ofColor::blue;
       } else {
@@ -215,16 +244,18 @@ class FtraceVis {
         e.ratio_to_trigger_without_release = 3.0;
       }
       e.dot_on_time = dot_on_time;
-      event_stats.insert({event_type, e});
+      event_stats.insert({ftrace_kind, e});
     }
   }
 
-    void trigger_particle() {
-        num_triggered += 1;
-        if(trigger_start_id + num_triggered > total_num_particles) {
-          trigger_start_id = 0;
-          cout << "Overshot total number of particles" << endl;
-        }
+    void trigger_particle(string ftrace_kind) {
+      if (ftrace_kind == "Random") {
+        fpc_random.trigger_particle();
+      } else if (ftrace_kind == "Syscall") {
+        fpc_syscall.trigger_particle();
+      } else if (ftrace_kind == "Tcp") {
+      } else if (ftrace_kind == "IrqMatrix") {
+      }
     }
 
     void update(float dt) {
@@ -232,28 +263,16 @@ class FtraceVis {
         es.second.update(dt);
       }
 
-    cout << "num triggered: " << num_triggered << endl;
-    cam->lookAt(ofVec3f(0.0, 0.0, 0.0));
-    cam->setPosition(cameraDist*sin(cameraRotation),
-                    0.0,
-                    cameraDist*cos(cameraRotation));
+      cam->lookAt(ofVec3f(0.0, 0.0, 0.0));
+      cam->setPosition(cameraDist*sin(cameraRotation),
+                       0.0,
+                       cameraDist*cos(cameraRotation));
 
-    cameraRotation += rotAmount;
+      cameraRotation += rotAmount;
 
-    ofShader &shader = particles.getUpdateShader();
-    shader.begin();
+      fpc_random.update(dt);
+      fpc_syscall.update(dt);
 
-
-    shader.setUniform1f("timestep", timestep);
-    shader.setUniform1i("num_triggered", num_triggered);
-    shader.setUniform1i("trigger_start_id", trigger_start_id);
-
-    trigger_start_id += num_triggered;
-    num_triggered = 0;
-
-    shader.end();
-
-    particles.update();
   }
 
   void draw(int width, int height) {
@@ -281,17 +300,15 @@ class FtraceVis {
 
     cam->begin();
 
+    glm::mat4 modelViewProjectionMatrix = cam->getModelViewProjectionMatrix();
+    fpc_random.draw(modelViewProjectionMatrix);
+    fpc_syscall.draw(modelViewProjectionMatrix);
 
     //debug box drawing
     // ofSetColor(0, 255, 0);
     // ofFill();
     // ofDrawBox(ofPoint(0.0, 0, 0), 10);
 
-    ofShader &shader = particles.getDrawShader();
-    shader.begin();
-    shader.setUniformMatrix4f("modelViewProjectionMatrix", cam->getModelViewProjectionMatrix());
-    shader.end();
-    particles.draw();
     ofDisableBlendMode();
 
     cam->end();
