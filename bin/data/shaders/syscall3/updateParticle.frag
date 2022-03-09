@@ -17,11 +17,17 @@ float dx = 0.0;
 float dy = 0.0;
 float dz = 0.0;
 
+
+// Rampe5 Attractor
+// newx=y*sin(a*x)+cos(b*y)+sin(c*z)
+// newy=z*sin(d*x)+cos(e*y)+sin(f*z)
+// newz=x*sin(g*x)+cos(h*y)+sin(i*z)
+
 float rand(vec2 co){
-    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453) * 20.0 - 10.0;
+    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453) * 5.0 - 2.5;
 }
 
-const float TTL = 5000.0;
+const float TTL = 300.0;
 
 void main(){
     int id = int(texCoordVarying.s) + int(texCoordVarying.t)*int(textureSize(particles0).x);
@@ -30,29 +36,10 @@ void main(){
 
     // TODO: Replace with branchless
         if(id >= trigger_start_id  && id < trigger_start_id + num_triggered) {
-            pos = vec3(rand(pos.xy), rand(pos.zy), rand(pos.xz)) * 0.2;
+            // pos = vec3(rand(pos.xy), rand(pos.zy), rand(pos.xz));
             time = vec3(TTL, 0.0, 0.0);
         }
     time.x -= 1.0;
-    
-    // get the previous position
-    float x = pos.x;
-    float y = pos.y;
-    float z = pos.z;
-    
-    // Dedras
-    float a = 3;
-    float b = 2.7;
-    float c = 1.7;
-    float d = 2;
-    float e = 9;
-    
-    dx = (y- a*x +b*y*z) * timestep;
-    dy = (c*y -x*z +z) * timestep;
-    dz = (d*x*y - e*z) * timestep;
-    
-    vec3 attractorForce = vec3(dx, dy, dz) ;
-    pos += attractorForce;
     
     posOut = vec4(pos, clamp(time.x/TTL, 0.0, 1.0));
     timeOut = vec4(time, 0.0);

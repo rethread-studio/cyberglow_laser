@@ -8,7 +8,7 @@
 #define POSITION_TEXTURE 0
 #define COLOR_TEXTURE 1
 
-static const float TIMESTEP = 0.3;
+static const float TIMESTEP = 0.5;
 
 class EventStats {
 public:
@@ -109,9 +109,9 @@ class FtraceParticleController {
           // particlesPosns[idx * 4 +1] = ofRandom(-startOffset, startOffset);
           // particlesPosns[idx * 4 +2] = ofRandom(-startOffset, startOffset);
           // particlesPosns[idx * 4 +3] = 0;
-          particlesPosns[idx * 4] =   float(x*20)/float(w/2);
-          particlesPosns[idx * 4 +1] = float(y*20)/float(h/2);
-          particlesPosns[idx * 4 +2] = 0;
+          particlesPosns[idx * 4] =   (float(x)/float(w)) * 20.0 - 10.;
+          particlesPosns[idx * 4 +1] = (float(y)/float(h)) * 20.0 - 10.;
+          particlesPosns[idx * 4 +2] = ofRandom(-startOffset, startOffset);
           particlesPosns[idx * 4 +3] = 0;
         }
       }
@@ -167,8 +167,6 @@ class FtraceVis {
     bool category_colors = false; // TODO
     float dot_on_time = 0.05;
 
-    ofFbo fboScreen;
-    ofEasyCam* cam;
 
     FtraceParticleController fpc_random;
     FtraceParticleController fpc_syscall;
@@ -176,8 +174,11 @@ class FtraceVis {
     FtraceParticleController fpc_irq;
 
 
+    ofFbo fboScreen;
+    ofEasyCam* cam;
     float cameraDist        = 30.0;
     float cameraRotation    = 0.0;
+    float cameraRotationY    = 0.0;
     float rotAmount         = 0.005;
 
 
@@ -187,27 +188,31 @@ class FtraceVis {
     } else {
       dot_on_time = 0.05;
     }
-    // init fbo
-    fboScreen.allocate(width, height, GL_RGB);
-    fboScreen.begin();
-    ofClear(0.0);
-    fboScreen.end();
-
-    // init camera for particle system
-
-    cam = new ofEasyCam();
-    cam->rotateDeg(-90, ofVec3f(1.0,0.0, 0.0));
-    cam->setDistance(cameraDist);
-
-    cam->setNearClip(0.1);
-    cam->setFarClip(200000);
-
-    // init FtraceParticleControlllers
-    fpc_syscall.init("syscall");
-    fpc_random.init("random");
 
   }
   FtraceVis() : FtraceVis(false, 1920, 1080) {}
+
+    void init(int width, int height) {
+
+      // init fbo
+      fboScreen.allocate(width, height, GL_RGB);
+      fboScreen.begin();
+      ofClear(0.0);
+      fboScreen.end();
+
+      // init camera for particle system
+
+      cam = new ofEasyCam();
+      cam->rotateDeg(-90, ofVec3f(1.0,0.0, 0.0));
+      cam->setDistance(cameraDist);
+
+      cam->setNearClip(0.1);
+      cam->setFarClip(200000);
+
+      // init FtraceParticleControlllers
+      fpc_syscall.init("syscall");
+      fpc_random.init("random");
+    }
 
   void register_event(string ftrace_kind) {
     trigger_particle(ftrace_kind);
@@ -251,6 +256,9 @@ class FtraceVis {
     void trigger_particle(string ftrace_kind) {
       if (ftrace_kind == "Random") {
         fpc_random.trigger_particle();
+        fpc_random.trigger_particle();
+        fpc_random.trigger_particle();
+        fpc_random.trigger_particle();
       } else if (ftrace_kind == "Syscall") {
         fpc_syscall.trigger_particle();
       } else if (ftrace_kind == "Tcp") {
@@ -262,13 +270,15 @@ class FtraceVis {
       for (auto &es : event_stats) {
         es.second.update(dt);
       }
+        fpc_random.trigger_particle();
 
       cam->lookAt(ofVec3f(0.0, 0.0, 0.0));
       cam->setPosition(cameraDist*sin(cameraRotation),
-                       0.0,
+                       cameraDist * sin(cameraRotationY),
                        cameraDist*cos(cameraRotation));
 
       cameraRotation += rotAmount;
+      cameraRotationY += rotAmount * 2.0;
 
       fpc_random.update(dt);
       fpc_syscall.update(dt);
@@ -302,7 +312,7 @@ class FtraceVis {
 
     glm::mat4 modelViewProjectionMatrix = cam->getModelViewProjectionMatrix();
     fpc_random.draw(modelViewProjectionMatrix);
-    fpc_syscall.draw(modelViewProjectionMatrix);
+    // fpc_syscall.draw(modelViewProjectionMatrix);
 
     //debug box drawing
     // ofSetColor(0, 255, 0);

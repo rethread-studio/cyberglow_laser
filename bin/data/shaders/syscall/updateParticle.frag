@@ -24,10 +24,10 @@ float dz = 0.0;
 // newz=x*sin(g*x)+cos(h*y)+sin(i*z)
 
 float rand(vec2 co){
-    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453) * 5.0 - 2.5;
+    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453) * 20.0 - 10.;
 }
 
-const float TTL = 300.0;
+const float TTL = 1000.0;
 
 void main(){
     int id = int(texCoordVarying.s) + int(texCoordVarying.t)*int(textureSize(particles0).x);
@@ -36,7 +36,7 @@ void main(){
 
     // TODO: Replace with branchless
         if(id >= trigger_start_id  && id < trigger_start_id + num_triggered) {
-            // pos = vec3(rand(pos.xy), rand(pos.zy), rand(pos.xz));
+            pos = vec3(rand(pos.xy), rand(pos.zy), rand(pos.xz)) * 0.5;
             time = vec3(TTL, 0.0, 0.0);
         }
     time.x -= 1.0;
@@ -47,17 +47,17 @@ void main(){
     float z = pos.z;
     
     // Dedras
-    float a = 0.2;
-    float b = 0.72;
-    float c = 0.062;
-    float d = 0.03;
-    float e = 0.008;
-    float f = 0.161;
-    float g = 0.265;
-    float h = 0.273;
-    float i = 0.32;
+    float a = -0.9896;
+    float b = 1.59303;
+    float c = 0.67615;
+    float d = -0.5314;
+    float e = 0.30705;
+    float f = 0.52351;
+    float g = -0.2949;
+    float h = -0.2542;
+    float i = -0.7666;
 
-    float dt = timestep;
+    float dt = timestep * 1.0;
 
     dx = (y * sin(a*x) + cos(b*y) + sin(c*z)) * dt;
     dy = (z * sin(d*x) + cos(e*y) + sin(f*z)) * dt;

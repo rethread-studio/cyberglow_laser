@@ -14,11 +14,9 @@ void main(){
     vec4 pos = vec4(texel0.xyz, 1.0);
     float time = texel0.w;
 
-    pos.x += 10.0;
-
     gl_Position = modelViewProjectionMatrix * pos;
     
-    vertColor = vec4(time + 0.1, pow(time, 5.0), 0.4 * time, pow(time, 1.5)*0.8);
+    vertColor = vec4(0.0, pow(time, 3.0), time, time * 0.6);
     
     gl_PointSize = 1.0;
 }

@@ -9,11 +9,11 @@ void ofApp::setup() {
 
   // Set up triangle positions
   triangle_positions[0] =
-      glm::vec2(width * 0.3 - halfw, height * 0.85 - halfh); // visualisation
+      glm::vec2(width * 0.2 - halfw, height * 0.65 - halfh); // visualisation
   triangle_positions[1] =
       glm::vec2(width * 0.5 - halfw, height * 0.15 - halfh); // server
   triangle_positions[2] =
-      glm::vec2(width * 0.7 - halfw, height * 0.85 - halfh); // user
+      glm::vec2(width * 0.8 - halfw, height * 0.85 - halfh); // user
 
   for (int i = 0; i < 3; i++) {
     event_line_columns.push_back(EventLineColumn(
@@ -21,10 +21,10 @@ void ofApp::setup() {
   }
 
   user_grid = UserGrid(width, height);
-  overview = Overview(triangle_positions);
+  ftrace_vis.init(width, height);
+  overview.init(triangle_positions, width, height);
   text_flow = TextFlow(width, height);
   transition.type = TransitionType::NONE; // disable the transition at startup
-  ftrace_rising_vis = FtraceVis(true, width, height);
 
   auto text_options = LaserTextOptions();
   text_options.size = 80.0;
@@ -39,6 +39,8 @@ void ofApp::setup() {
   // laser_texts.push_back(LaserText("MOVE OPEN FILE", text_options, 4,
   // glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh + (text_options.size *
   // 2))));
+  //
+  ofBackground(0);
 }
 
 //--------------------------------------------------------------
@@ -73,7 +75,32 @@ void ofApp::update() {
     //   transitionToFrom(vis_mode, vis_mode);
     // }
 
-    overview.update();
+  switch (vis_mode) {
+    case VisMode::WEBSERVER: {
+      web_server_vis.update();
+    } break;
+    case VisMode::TEXT_DEMO: {
+      text_flow.update(width);
+    } break;
+    case VisMode::USER: {
+      break;
+    }
+    case VisMode::USER_GRID: {
+      user_grid.update(dt);
+      break;
+    }
+    case VisMode::FTRACE: {
+      ftrace_vis.update(dt);
+      break;
+    }
+    case VisMode::ZOOMED_OUT: {
+      for (auto &lt : laser_texts) {
+        lt.update();
+      }
+      overview.update(dt);
+      break;
+    }
+  }
 
     scan_x += 10;
     if (scan_x > halfw) {
@@ -106,13 +133,6 @@ void ofApp::update() {
       }
     }
 
-    for (auto &lt : laser_texts) {
-      lt.update();
-    }
-    text_flow.update(width);
-    ftrace_vis.update(dt);
-    ftrace_rising_vis.update(dt);
-    user_grid.update(dt);
 
     auto pt = player_trails.find(current_player_trail_id);
     if (pt != player_trails.end()) {
@@ -126,7 +146,6 @@ void ofApp::update() {
     for (auto &elc : event_line_columns) {
       elc.update();
     }
-    web_server_vis.update();
   }
 }
 
@@ -220,7 +239,7 @@ void ofApp::addActivityPoint(int source) {
   if (source >= 3) {
     return;
   }
-  if (source != TriangleVIS) {
+/*if (source != TriangleVIS) {
     float offset_angle = ofRandom(0, TWO_PI);
     float offset = ofRandom(0, width * 0.07);
     glm::vec2 position =
@@ -230,7 +249,7 @@ void ofApp::addActivityPoint(int source) {
     glm::vec2 destination = glm::vec2(0, 0);
     switch (source) {
     case 0:
-      destination = triangle_positions[1];
+      destination = triangle_positions[1]; bb
       break;
     case 1:
       if (ofRandom(0, 1) > 0.5) {
@@ -256,6 +275,9 @@ void ofApp::addActivityPoint(int source) {
     activity_level_increase = 0.00006;
   }
   triangle_activity[source] += activity_level_increase;
+
+  }*/
+  overview.trigger_activity(source);
 }
 
 void ofApp::pickRandomPlayerTrail() {
@@ -308,7 +330,6 @@ void ofApp::checkOscMessages() {
         parseOscMessage(origin, action, arguments);
       } else if (m.getAddress() == "/ftrace") {
         ftrace_vis.register_event(m.getArgAsString(0));
-        ftrace_rising_vis.register_event(m.getArgAsString(0));
         // cout << "ftrace: " << m.getArgAsString(0) << endl;
         addActivityPoint(TriangleVIS);
       }
@@ -487,10 +508,6 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
     ftrace_vis.draw(width, height);
     break;
   }
-  case VisMode::FTRACE_RISING: {
-    ftrace_rising_vis.draw(width, height);
-    break;
-  }
   case VisMode::ZOOMED_OUT: {
     // draw triangle positions
     float intensity = 0.2;
@@ -518,6 +535,7 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
         ap.draw(scale);
       }
     }
+    overview.draw(width, height);
     break;
   }
   }
@@ -649,7 +667,7 @@ int visModeCategory(VisMode vis) {
   } else if (vis == VisMode::USER || vis == VisMode::USER_GRID ||
              vis == VisMode::TEXT_DEMO) {
     return TriangleUSER;
-  } else if (vis == VisMode::FTRACE || vis == VisMode::FTRACE_RISING) {
+  } else if (vis == VisMode::FTRACE ) {
     return TriangleVIS;
   } else if (vis == VisMode::ZOOMED_OUT) {
     return 3;
@@ -703,10 +721,6 @@ Transition ofApp::getTransitionToFrom(VisMode from, VisMode to) {
       break;
     }
     case VisMode::FTRACE: {
-      t.zoom_target = triangle_positions[TriangleVIS];
-      break;
-    }
-    case VisMode::FTRACE_RISING: {
       t.zoom_target = triangle_positions[TriangleVIS];
       break;
     }

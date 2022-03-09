@@ -25,7 +25,6 @@ enum class VisMode {
   ZOOMED_OUT,
   TEXT_DEMO,
   FTRACE,
-  FTRACE_RISING,
   LAST,
 };
 
@@ -178,7 +177,7 @@ public:
   void transitionToFrom(VisMode from, VisMode to);
   Transition getTransitionToFrom(VisMode from, VisMode to);
 
-  VisMode vis_mode = VisMode::FTRACE;
+  VisMode vis_mode = VisMode::ZOOMED_OUT;
   Transition transition;
   bool is_paused =
       false; // When paused, the image should be static (for photography)
@@ -190,7 +189,6 @@ public:
   vector<EventLineColumn> event_line_columns;
   unordered_map<string, PlayerTrail> player_trails;
   FtraceVis ftrace_vis;
-  FtraceVis ftrace_rising_vis;
   Overview overview;
 
   WebServerVis web_server_vis;

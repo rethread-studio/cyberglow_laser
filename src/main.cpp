@@ -7,6 +7,7 @@ int main() {
     settings.setGLVersion(4, 1);
     settings.setSize(1920, 1080);
     settings.numSamples = 4;
+    settings.windowMode = OF_GAME_MODE;
 
     ofCreateWindow(settings);
 
