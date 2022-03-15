@@ -129,7 +129,7 @@ void main(){
     activated = float(abs(dist_from_target) > MIN_DIST_FROM_TARGET) * activated;
 
 
-    float time_weight = 1.0 - pow(clamp(time * 0.02, 0.0, 1.0), 2.0);
+    float time_weight = 1.0 - pow(clamp(time * 0.04, 0.0, 1.0), 2.0);
     // vec2 acc = normalize(target_pos - pos) * TARGET_ACCELERATION *
     //     (sin(time*0.5 + rand(vec2(float(id), pos.y))) +0.8);
     vec2 acc = normalize(target_pos - pos) * TARGET_ACCELERATION;

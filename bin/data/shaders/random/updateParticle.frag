@@ -21,7 +21,7 @@ float rand(vec2 co){
     return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453) * 20.0 - 10.0;
 }
 
-const float TTL = 5000.0;
+const float TTL = 1000.0;
 
 void main(){
     int id = int(texCoordVarying.s) + int(texCoordVarying.t)*int(textureSize(particles0).x);
@@ -30,7 +30,7 @@ void main(){
 
     // TODO: Replace with branchless
         if(id >= trigger_start_id  && id < trigger_start_id + num_triggered) {
-            pos = vec3(rand(pos.xy), rand(pos.zy), rand(pos.xz)) * 0.2;
+            pos = vec3(rand(pos.xy), rand(pos.zy), rand(pos.xz)) * 0.3;
             time = vec3(TTL, 0.0, 0.0);
         }
     time.x -= 1.0;
@@ -54,6 +54,6 @@ void main(){
     vec3 attractorForce = vec3(dx, dy, dz) ;
     pos += attractorForce;
     
-    posOut = vec4(pos, clamp(time.x/TTL, 0.0, 1.0));
+    posOut = vec4(pos, clamp((time.x/TTL), 0.0, 1.0));
     timeOut = vec4(time, 0.0);
 }

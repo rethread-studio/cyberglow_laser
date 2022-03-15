@@ -2,6 +2,9 @@
 precision highp float;
 
 
+uniform float fadeCoeff;
+uniform float brightnessFadeLow;
+uniform float brightnessFade;
 uniform sampler2DRect tex0;
 uniform sampler2DRect tex1;
 uniform vec2 mouse;
@@ -20,8 +23,10 @@ void main()
 {
 	vec2 st = gl_FragCoord.xy;
 	// get texture colour
-	vec3 color =  texture(tex0, st).rgb;// * vec4(1., 0., 0. ,1.);
-
+	vec4 data =  texture(tex0, st).rgba;// * rgba(1., 0., 0. ,1.);
+  float alpha = data.a;
+  vec3 new_color = data.rgb;
+  vec3 color = vec3(0.0);
 
   vec3 c_u = texture(tex1, st+vec2(0, 1)).rgb;
   vec3 c_d = texture(tex1, st+vec2(0, -1)).rgb;
@@ -32,15 +37,22 @@ void main()
   c_d = texture(tex1, st+vec2(0, -2)).rgb;
   c_r = texture(tex1, st+vec2(2, 0)).rgb;
   c_l = texture(tex1, st+vec2(-2, 0)).rgb;
-  color += (c_u + c_d + c_r + c_l) * 0.0105;
+  color += (c_u + c_d + c_r + c_l) * 0.0105* fadeCoeff;
 
-  float c_sum = sum(color);
 
-  float alpha = float(c_sum > 0.0) * 0.995 + 0.005;
+  float c_sum = sum(new_color);
+  float trail_sum = sum(color);
+
+  // fade trails if too bright
+  color *= smoothstep(3.0, brightnessFadeLow, trail_sum) * 0.37 + 0.63;
+
+  float has_color = float(c_sum > 0.0);
+  // fade out if there's no color in the particle texture
+  alpha = 1.0;
+  color = has_color * new_color + (1.0 - has_color) * color * brightnessFade;
   // avoid blowing out colors
-  color *= smoothstep(3.0, 2.7, c_sum) * 0.07 + 0.93;
   // float alpha = 1.0;
   // color = vec3(st.xy, 1.0);
 
-  outputColor = vec4(color, alpha);
+  outputColor = vec4(color, alpha * 0.99);
 }

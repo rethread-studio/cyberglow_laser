@@ -53,6 +53,13 @@ class OverviewParticleController {
       particles.addDrawShader("shaders/"+suffix+"/drawParticle");
     }
 
+    void reset() {
+      num_triggered = 0;
+      trigger_start_id = 0;
+      particles.zeroDataTexture(0);
+      particles.zeroDataTexture(1);
+    }
+
     void trigger_particle() {
         num_triggered += 1;
         if(trigger_start_id + num_triggered > total_num_particles) {
@@ -89,10 +96,47 @@ class OverviewParticleController {
     }
 };
 
+class FlickerText {
+  public:
+    string text;
+    glm::vec2 pos;
+    bool on = false;
+    float offMin = 0.1;
+    float offMax = 2.0;
+    float onMin = 0.05;
+    float onMax = 0.5;
+    float timeCounter = 0.0;
+
+    FlickerText() {}
+
+    FlickerText(string text_, glm::vec2 pos_): text(text_), pos(pos_) {}
+
+    void update(float dt) {
+      timeCounter -= dt;
+      if(timeCounter <= 0.0) {
+        on = !on;
+        if(on) {
+          timeCounter = pow(ofRandom(0, 1.0), 5.0) * (onMax-onMin) + onMin;
+        } else {
+          timeCounter = ofRandom(offMin, offMax);
+        }
+      }
+    }
+    void draw(ofTrueTypeFont& font) {
+      if(on) {
+        ofSetColor(255);
+        font.drawString(text, pos.x, pos.y);
+      }
+    }
+
+};
+
 class Overview {
   public:
     glm::vec2 triangle_positions[3];
     vector<LaserText> location_texts;
+    vector<FlickerText> flicker_texts;
+    bool enabled = true;
 
     bool finished_init = false;
     int text_index = 0;
@@ -120,11 +164,6 @@ class Overview {
     void init(glm::vec2 triangle_positions_[3], int width, int height) {
 
 
-      for (int i = 0; i < 3; i++) {
-        triangle_positions[i] = triangle_positions_[i];
-        // flip the y axis because it needs to be flipped in the shader
-        triangle_positions[i].y = -triangle_positions[i].y;
-      }
       LaserTextOptions options;
       options.size = 40.0;
       options.color = ofColor(255, 0, 255);
@@ -136,8 +175,29 @@ class Overview {
       location_texts.push_back(
         LaserText("USER", options, 3, triangle_positions[TriangleUSER] + o));
 
+      flicker_texts.push_back(FlickerText("VISUALISATION",
+                                         triangle_positions_[TriangleVIS] + o));
+      flicker_texts.push_back(FlickerText("SERVER",
+                                         triangle_positions_[TriangleSERVER] + o));
+      flicker_texts.push_back(
+        FlickerText("USER", triangle_positions_[TriangleUSER] + o));
+
+
+      // location_texts[TriangleUSER].pos.x += 90;
+      // location_texts[TriangleVIS].pos.x -=
+      //     location_texts[TriangleVIS].get_width() + 20;
+      // location_texts[TriangleSERVER].pos.x -=
+      //     location_texts[TriangleSERVER].get_width() * 0.5;
+      // location_texts[TriangleSERVER].pos.y -= 120;
+
       for (auto &text : location_texts) {
         text.offFrames = 12;
+      }
+
+      for (int i = 0; i < 3; i++) {
+        triangle_positions[i] = triangle_positions_[i];
+        // flip the y axis because it needs to be flipped in the shader
+        triangle_positions[i].y = -triangle_positions[i].y;
       }
       // init fbo
       fboScreen.allocate(width, height, GL_RGBA);
@@ -165,6 +225,28 @@ class Overview {
       opc_server_to_user.init("server_to_user", triangle_positions[TriangleSERVER], triangle_positions[TriangleUSER]);
       opc_server_to_vis.init("server_to_vis", triangle_positions[TriangleSERVER], triangle_positions[TriangleVIS]);
       opc_ftrace.init("ftrace_overview", triangle_positions[TriangleVIS], triangle_positions[TriangleVIS]);
+    }
+
+    void enable() {
+      cout << "enable overview" << endl;
+
+      enabled = true;
+      // remove trails
+      fboScreen.begin();
+      ofClear(0.0);
+      fboScreen.end();
+      fboFade.begin();
+      ofClear(0.0);
+      fboFade.end();
+
+      opc_ftrace.reset();
+      opc_server_to_user.reset();
+      opc_server_to_vis.reset();
+      opc_user.reset();
+    }
+    void disable() {
+      cout << "disable overview" << endl;
+      enabled = false;
     }
 
   void draw_symbols() {
@@ -195,7 +277,6 @@ class Overview {
   }
 
   void update(float dt) {
-    if (finished_init) {
       // for(auto& text : location_texts) {
       //     text.update();
       // }
@@ -203,12 +284,15 @@ class Overview {
       if (location_texts[text_index].resetFrame) {
         text_index = (text_index + 1) % location_texts.size();
       }
-    }
 
-          opc_user.trigger_particle();
-          opc_server_to_user.trigger_particle();
-          opc_server_to_vis.trigger_particle();
-          opc_ftrace.trigger_particle();
+      for(auto& ft : flicker_texts) {
+        ft.update(dt);
+      }
+
+          // opc_user.trigger_particle();
+          // opc_server_to_user.trigger_particle();
+          // opc_server_to_vis.trigger_particle();
+          // opc_ftrace.trigger_particle();
       opc_user.update(dt);
       opc_ftrace.update(dt);
       opc_server_to_user.update(dt);
@@ -231,7 +315,7 @@ class Overview {
       }
     }
 
-  void draw(int width, int height) {
+  void draw(int width, int height, ofTrueTypeFont& font) {
     ofPushMatrix();
     fboScreen.begin();
     ofClear(0, 0, 0);
@@ -241,22 +325,27 @@ class Overview {
 
     glEnable(GL_PROGRAM_POINT_SIZE);
 
-    cam->begin();
+    if(enabled) {
+      cam->begin();
 
-    glm::mat4 modelViewProjectionMatrix = cam->getModelViewProjectionMatrix();
-    opc_user.draw(modelViewProjectionMatrix);
-    opc_server_to_user.draw(modelViewProjectionMatrix);
-    opc_server_to_vis.draw(modelViewProjectionMatrix);
-    opc_ftrace.draw(modelViewProjectionMatrix);
+      glm::mat4 modelViewProjectionMatrix = cam->getModelViewProjectionMatrix();
+      opc_user.draw(modelViewProjectionMatrix);
+      opc_server_to_user.draw(modelViewProjectionMatrix);
+      opc_server_to_vis.draw(modelViewProjectionMatrix);
+      opc_ftrace.draw(modelViewProjectionMatrix);
 
-    //debug box drawing
-    // ofSetColor(0, 255, 0);
-    // ofFill();
-    // ofDrawBox(ofPoint(0.0, 0, 0), 10);
+      //debug box drawing
+      // ofSetColor(0, 255, 0);
+      // ofFill();
+      // ofDrawBox(ofPoint(0.0, 0, 0), 10);
 
-    // ofDisableBlendMode();
+      // ofDisableBlendMode();
 
-    cam->end();
+      cam->end();
+    }
+    ofTranslate(width*0.5, height*0.5, 0);
+
+    // font.drawString("TEST test Server", 0, 0);
     fboScreen.end();
     ofPopMatrix();
 
@@ -267,6 +356,15 @@ class Overview {
       ofSetColor(255, 30);
       // draw the diff image to the mask with extreme contrast and in greyscale using the maskFilterShader
       trailShader.begin();
+
+        trailShader.setUniform1f("fadeCoeff", 1.0);
+        if(enabled) {
+          trailShader.setUniform1f("brightnessFade", 0.9995);
+    trailShader.setUniform1f("brightnessFadeLow", 2.4);
+        } else {
+          trailShader.setUniform1f("brightnessFade", 0.99);
+    trailShader.setUniform1f("brightnessFadeLow", 0);
+        }
         trailShader.setUniform2f("resolution", glm::vec2(1920.0, 1080.0));
         trailShader.setUniformTexture("tex0", fboScreen.getTextureReference(), 1);
         trailShader.setUniformTexture("tex1", fboFade.getTextureReference(), 2);
@@ -282,26 +380,19 @@ class Overview {
     // ofDisableBlendMode();
     fboFade.draw(width*-0.5, height*-0.5, width, height);
     // fboScreen.draw(width*-0.5, height*-0.5, width, height);
+    for(auto& ft : flicker_texts) {
+      ft.draw(font);
+    }
 
   }
 
-  void draw_text() {
-    if (!finished_init) {
-      // location_texts[TriangleUSER].pos.x -=
-      // location_texts[TriangleUSER].get_width(laser) + 20;
-      location_texts[TriangleUSER].pos.x += 90;
-      location_texts[TriangleVIS].pos.x -=
-          location_texts[TriangleVIS].get_width() + 20;
-      location_texts[TriangleSERVER].pos.x -=
-          location_texts[TriangleSERVER].get_width() * 0.5;
-      location_texts[TriangleSERVER].pos.y -= 120;
-      finished_init = true;
-    }
-
+  void draw_text(ofTrueTypeFont& font) {
     // for(auto& text : location_texts) {
     //     text.draw(laser);
     // }
-    location_texts[text_index].draw();
+    auto& lt = location_texts[text_index];
+    ofSetColor(100);
+    font.drawString(lt.text, lt.pos.x, lt.pos.y);
   }
 };
 

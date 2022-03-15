@@ -105,12 +105,12 @@ class FtraceParticleController {
         for(unsigned x = 0; x < w; x++){
           unsigned idx = y * w + x;
 
-          // particlesPosns[idx * 4] =    ofRandom(-startOffset, startOffset);
-          // particlesPosns[idx * 4 +1] = ofRandom(-startOffset, startOffset);
+          particlesPosns[idx * 4] =    ofRandom(-startOffset, startOffset);
+          particlesPosns[idx * 4 +1] = ofRandom(-startOffset, startOffset);
           // particlesPosns[idx * 4 +2] = ofRandom(-startOffset, startOffset);
           // particlesPosns[idx * 4 +3] = 0;
-          particlesPosns[idx * 4] =   (float(x)/float(w)) * 20.0 - 10.;
-          particlesPosns[idx * 4 +1] = (float(y)/float(h)) * 20.0 - 10.;
+          // particlesPosns[idx * 4] =   (float(x)/float(w)) * 20.0 - 10.;
+          // particlesPosns[idx * 4 +1] = (float(y)/float(h)) * 20.0 - 10.;
           particlesPosns[idx * 4 +2] = ofRandom(-startOffset, startOffset);
           particlesPosns[idx * 4 +3] = 0;
         }
@@ -123,6 +123,13 @@ class FtraceParticleController {
 
       particles.addUpdateShader("shaders/"+suffix+"/updateParticle");
       particles.addDrawShader("shaders/"+suffix+"/drawParticle");
+    }
+
+    void reset() {
+      num_triggered = 0;
+      trigger_start_id = 0;
+      // particles.zeroDataTexture(0);
+      // particles.zeroDataTexture(1);
     }
 
     void trigger_particle() {
@@ -139,6 +146,7 @@ class FtraceParticleController {
       shader.begin();
 
       shader.setUniform1f("timestep", TIMESTEP * dt);
+      shader.setUniform1f("total_time", ofGetElapsedTimef());
       shader.setUniform1i("num_triggered", num_triggered);
       shader.setUniform1i("trigger_start_id", trigger_start_id);
 
@@ -167,6 +175,8 @@ class FtraceVis {
     bool category_colors = false; // TODO
     float dot_on_time = 0.05;
 
+    bool enabled = true;
+
 
     FtraceParticleController fpc_random;
     FtraceParticleController fpc_syscall;
@@ -176,6 +186,8 @@ class FtraceVis {
 
     ofFbo fboScreen;
     ofEasyCam* cam;
+    ofFbo fboFade;
+    ofShader trailShader;
     float cameraDist        = 30.0;
     float cameraRotation    = 0.0;
     float cameraRotationY    = 0.0;
@@ -200,6 +212,14 @@ class FtraceVis {
       ofClear(0.0);
       fboScreen.end();
 
+
+      // trail
+      trailShader.load("shaders/trail/shader");
+      fboFade.allocate(width, height, GL_RGBA32F);
+      fboFade.begin();
+      ofClear(0.0);
+      fboFade.end();
+
       // init camera for particle system
 
       cam = new ofEasyCam();
@@ -212,6 +232,26 @@ class FtraceVis {
       // init FtraceParticleControlllers
       fpc_syscall.init("syscall");
       fpc_random.init("random");
+    }
+
+    void enable() {
+      cout << "enable ftrace" << endl;
+      enabled = true;
+      fboScreen.begin();
+      ofClear(0.0);
+      fboScreen.end();
+      fboFade.begin();
+      ofClear(0.0);
+      fboFade.end();
+      fpc_syscall.reset();
+      fpc_random.reset();
+      fpc_irq.reset();
+      fpc_tcp.reset();
+    }
+
+    void disable() {
+      cout << "disable ftrace" << endl;
+      enabled = false;
     }
 
   void register_event(string ftrace_kind) {
@@ -271,6 +311,7 @@ class FtraceVis {
         es.second.update(dt);
       }
         fpc_random.trigger_particle();
+        fpc_random.trigger_particle();
 
       cam->lookAt(ofVec3f(0.0, 0.0, 0.0));
       cam->setPosition(cameraDist*sin(cameraRotation),
@@ -308,11 +349,12 @@ class FtraceVis {
 
     glEnable(GL_PROGRAM_POINT_SIZE);
 
+    if(enabled) {
     cam->begin();
 
     glm::mat4 modelViewProjectionMatrix = cam->getModelViewProjectionMatrix();
+    fpc_syscall.draw(modelViewProjectionMatrix);
     fpc_random.draw(modelViewProjectionMatrix);
-    // fpc_syscall.draw(modelViewProjectionMatrix);
 
     //debug box drawing
     // ofSetColor(0, 255, 0);
@@ -322,11 +364,39 @@ class FtraceVis {
     ofDisableBlendMode();
 
     cam->end();
+    }
     fboScreen.end();
     ofPopMatrix();
 
     ofSetColor(255);
-    fboScreen.draw(width*-0.5, height*-0.5, width, height);
+    // fboScreen.draw(width*-0.5, height*-0.5, width, height);
+
+
+    fboFade.begin();
+    ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+    ofSetColor(255, 30);
+    // draw the diff image to the mask with extreme contrast and in greyscale using the maskFilterShader
+    trailShader.begin();
+      trailShader.setUniform1f("fadeCoeff", 0.99);
+      if(enabled) {
+        trailShader.setUniform1f("brightnessFade", 0.999);
+    trailShader.setUniform1f("brightnessFadeLow", 1.5);
+      } else {
+        trailShader.setUniform1f("brightnessFade", 0.99);
+    trailShader.setUniform1f("brightnessFadeLow", 1.5);
+      }
+      trailShader.setUniform2f("resolution", glm::vec2(1920.0, 1080.0));
+      trailShader.setUniformTexture("tex0", fboScreen.getTextureReference(), 1);
+      trailShader.setUniformTexture("tex1", fboFade.getTextureReference(), 2);
+        // DEBUG:
+        //maskFilterShader.setUniform2f("mouse", float(ofGetMouseX())/float(ofGetWidth()), float(ofGetMouseY())/float(ofGetHeight()));
+        ofSetColor(255, 255);
+        fboScreen.draw(0, 0);
+        trailShader.end();
+    fboFade.end();
+
+    ofSetColor(255);
+    fboFade.draw(width*-0.5, height*-0.5, width, height);
   }
 };
 

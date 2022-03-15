@@ -20,6 +20,10 @@ void ofApp::setup() {
         glm::vec2(i * (width / 3) - halfw, -halfh), width / 3, height));
   }
 
+
+
+  font.load("FT88-Expanded.otf", 40);
+
   user_grid = UserGrid(width, height);
   ftrace_vis.init(width, height);
   overview.init(triangle_positions, width, height);
@@ -50,7 +54,7 @@ void ofApp::update() {
     last_time = ofGetElapsedTimef();
   }
   float now = ofGetElapsedTimef();
-  float dt = now - last_time;
+  dt = now - last_time;
   last_time = now;
 
   // Checking for OSC messages should be done even if paused to discard messages
@@ -63,11 +67,11 @@ void ofApp::update() {
         !idle_mode_on) {
       next_transition_countdown -= dt;
       if (next_transition_countdown <= 0.0) {
+        cout << "transition timing met, going to the next vis mode" << endl;
         activateTransitionToNext();
         next_transition_countdown = time_per_vis;
       }
     }
-    transition.update(dt);
 
     // For some visualisations, transition to self automatically
     // if (!transition.active() && transition_chain.size() == 0 &&
@@ -76,76 +80,22 @@ void ofApp::update() {
     // }
 
   switch (vis_mode) {
-    case VisMode::WEBSERVER: {
-      web_server_vis.update();
-    } break;
-    case VisMode::TEXT_DEMO: {
-      text_flow.update(width);
-    } break;
-    case VisMode::USER: {
-      break;
-    }
-    case VisMode::USER_GRID: {
-      user_grid.update(dt);
-      break;
-    }
     case VisMode::FTRACE: {
       ftrace_vis.update(dt);
       break;
     }
     case VisMode::ZOOMED_OUT: {
-      for (auto &lt : laser_texts) {
-        lt.update();
-      }
       overview.update(dt);
       break;
     }
   }
 
-    scan_x += 10;
-    if (scan_x > halfw) {
-      scan_x = -halfw;
-    }
 
     noise_counter += 0.001;
     rot_x = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01) * 2.0 - 1.0;
     rot_y =
         ofNoise(noise_counter, ofGetElapsedTimef() * 0.01 + 2534.0) * 2.0 - 1.0;
 
-    for (auto &ap : activity_points) {
-      ap.update();
-    }
-    // remove expired activity points
-    for (int i = activity_points.size() - 1; i >= 0; i--) {
-      if (activity_points[i].frames_to_live <= 0) {
-        activity_points.erase(activity_points.begin() + i);
-      }
-    }
-
-    for (size_t i = 0; i < 3; i++) {
-      if (i == TriangleVIS) {
-        triangle_activity[i] *= 0.8;
-      } else {
-        triangle_activity[i] *= 0.95;
-      }
-      if (triangle_activity[i] > 1.0) {
-        triangle_activity[i] = 1.0;
-      }
-    }
-
-
-    auto pt = player_trails.find(current_player_trail_id);
-    if (pt != player_trails.end()) {
-      if (pt->second.finished_cycle) {
-        pickRandomPlayerTrail();
-      }
-    } else {
-      pickRandomPlayerTrail();
-    }
-    // Update event line columns
-    for (auto &elc : event_line_columns) {
-      elc.update();
-    }
   }
 }
 
@@ -162,77 +112,24 @@ void ofApp::draw() {
   // Translating the coordinate system also works
 
   if (transition.active()) {
-    if ((transition.from_vis != VisMode::ZOOMED_OUT ||
-         transition.phase < 0.65) &&
-        (transition.to_vis != VisMode::ZOOMED_OUT || transition.phase < 0.45)) {
-      ofPushMatrix();
-      transition.applyTransitionFrom();
-      drawVisualisation(transition.from_vis, 1.0);
-      ofPopMatrix();
-    }
-    if (transition.from_vis != VisMode::ZOOMED_OUT || transition.phase > 0.25) {
-      ofPushMatrix();
-      transition.applyTransitionTo();
-      drawVisualisation(transition.to_vis, 1.0);
-      ofPopMatrix();
-    }
-  } else {
-    if (transition_chain.size() > 0) {
-      // pick the next transition from the chain
-      transition = transition_chain[0];
+    transition.update(dt);
+    if(!transition.active()) {
+      cout << "transition was just finished, activate" << endl;
       vis_mode = transition.to_vis;
-      transition_chain.erase(transition_chain.begin());
-      // draw
-      ofPushMatrix();
-      transition.applyTransitionFrom();
-      drawVisualisation(transition.from_vis, 1.0);
-      ofPopMatrix();
-      ofPushMatrix();
-      transition.applyTransitionTo();
-      drawVisualisation(transition.to_vis, 1.0);
-      ofPopMatrix();
-    } else {
-      drawVisualisation(vis_mode, 1.0);
+      switch(vis_mode) {
+        case VisMode::FTRACE:
+          ftrace_vis.enable();
+          break;
+        case VisMode::ZOOMED_OUT:
+          overview.enable();
+          break;
+      }
     }
   }
+      drawVisualisation(vis_mode, 1.0);
 
   ofPopMatrix();
   // sends points to the DAC
-}
-
-void ofApp::addRandomActivityPoint() {
-
-  size_t tri = ofRandom(0, 2.99);
-  float offset_angle = ofRandom(0, TWO_PI);
-  float offset = ofRandom(0, width * 0.07);
-  glm::vec2 position =
-      triangle_positions[tri] -
-      glm::vec2(cos(offset_angle) * offset, sin(offset_angle) * offset);
-  // Velocity out from center point
-  float vel_angle = offset_angle + PI;
-  float vel_amp = ofRandom(0.5, 4.0);
-  glm::vec2 vel = glm::vec2(cos(vel_angle) * vel_amp, sin(vel_angle) * vel_amp);
-  auto ap = ActivityPoint(position, vel, ofColor::green);
-  // Velocity towards neighbouring point
-  glm::vec2 destination = glm::vec2(0, 0);
-  switch (tri) {
-  case 0:
-    destination = triangle_positions[1];
-    break;
-  case 1:
-    if (ofRandom(0, 1) > 0.5) {
-      destination = triangle_positions[0];
-    } else {
-      destination = triangle_positions[2];
-    }
-    break;
-  case 2:
-    destination = triangle_positions[1];
-    break;
-  }
-  ap.launch_towards(destination, vel_amp);
-  ap.grow(ofRandom(0.0, 0.5));
-  activity_points.push_back(ap);
 }
 
 void ofApp::addActivityPoint(int source) {
@@ -278,20 +175,6 @@ void ofApp::addActivityPoint(int source) {
 
   }*/
   overview.trigger_activity(source);
-}
-
-void ofApp::pickRandomPlayerTrail() {
-  vector<string> keys;
-  for (auto it = player_trails.begin(); it != player_trails.end(); ++it) {
-    keys.push_back(it->first);
-  }
-  if (keys.size() > 0) {
-    current_player_trail_id = keys[rand() % keys.size()];
-    auto pt = player_trails.find(current_player_trail_id);
-    if (pt != player_trails.end()) {
-      pt->second.reset_cycle();
-    }
-  }
 }
 
 void ofApp::activateTransitionToNext() {
@@ -475,67 +358,38 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
 void ofApp::drawVisualisation(VisMode vis, float scale) {
 
   switch (vis) {
-  case VisMode::WEBSERVER: {
-    web_server_vis.draw(width, height);
-  } break;
-  case VisMode::TEXT_DEMO: {
-    // auto text_options = LaserTextOptions();
-    // text_options.size = 80.0;
-    // text_options.color = ofColor::red;
-    // draw_laser_text(laser, "AXY0123456789", text_options, glm::vec2(width *
-    // 0.4 - halfw, height * 0.5 - halfh)); draw_laser_text(laser, "57131",
-    // text_options, glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh));
-    // draw_laser_text(laser, "MOVE OPEN FILE", text_options, glm::vec2(width *
-    // 0.2 - halfw, height * 0.2 - halfh + (text_options.size * 2)));
-
-    // for(auto& lt : laser_texts) {
-    //     lt.draw(laser);
-    // }
-    text_flow.draw();
-  } break;
-  case VisMode::USER: {
-    auto pt = player_trails.find(current_player_trail_id);
-    if (pt != player_trails.end()) {
-      pt->second.draw(scale);
-    }
-    break;
-  }
-  case VisMode::USER_GRID: {
-    user_grid.draw();
-    break;
-  }
   case VisMode::FTRACE: {
     ftrace_vis.draw(width, height);
     break;
   }
   case VisMode::ZOOMED_OUT: {
     // draw triangle positions
-    float intensity = 0.2;
-    for (size_t i = 0; i < 3; i++) {
-      ofFill();
-      ofSetColor(ofColor::blue);
-      ofDrawCircle(triangle_positions[i].x * scale,
-                   triangle_positions[i].y * scale, dotSize);
-      float radius = powf(triangle_activity[i], 0.5) * height * 0.08 + 10;
-      if (transition.active()) {
-        radius = 15.0;
-      }
-      ofNoFill();
-      ofSetColor(ofColor::blue);
-      ofDrawCircle(triangle_positions[i].x, triangle_positions[i].y, radius);
-    }
+    // float intensity = 0.2;
+    // for (size_t i = 0; i < 3; i++) {
+    //   ofFill();
+    //   ofSetColor(ofColor::blue);
+    //   ofDrawCircle(triangle_positions[i].x * scale,
+    //                triangle_positions[i].y * scale, dotSize);
+    //   float radius = powf(triangle_activity[i], 0.5) * height * 0.08 + 10;
+    //   if (transition.active()) {
+    //     radius = 15.0;
+    //   }
+    //   ofNoFill();
+    //   ofSetColor(ofColor::blue);
+    //   ofDrawCircle(triangle_positions[i].x, triangle_positions[i].y, radius);
+    // }
     // for(auto& elc : event_line_columns) {
     //     elc.draw(laser, scan_x, scan_width);
     // }
     // overview.draw_symbols(laser);
-    if (!transition.active()) {
-      overview.draw_text();
-      // draw point activity
-      for (auto &ap : activity_points) {
-        ap.draw(scale);
-      }
-    }
-    overview.draw(width, height);
+    // if (!transition.active()) {
+    //   overview.draw_text();
+    //   // draw point activity
+    //   for (auto &ap : activity_points) {
+    //     ap.draw(scale);
+    //   }
+    // }
+    overview.draw(width, height, font);
     break;
   }
   }
@@ -561,12 +415,6 @@ void ofApp::keyPressed(int key) {
       transitionToFrom(from, to);
     }
     break;
-  case 'c': {
-    if (vis_mode == VisMode::WEBSERVER) {
-      web_server_vis.change_mode();
-    }
-    break;
-  }
   case ' ': {
     is_paused = !is_paused;
     break;
@@ -662,12 +510,7 @@ void ofApp::gotMessage(ofMessage msg) {}
 void ofApp::dragEvent(ofDragInfo dragInfo) {}
 
 int visModeCategory(VisMode vis) {
-  if (vis == VisMode::WEBSERVER) {
-    return TriangleSERVER;
-  } else if (vis == VisMode::USER || vis == VisMode::USER_GRID ||
-             vis == VisMode::TEXT_DEMO) {
-    return TriangleUSER;
-  } else if (vis == VisMode::FTRACE ) {
+  if (vis == VisMode::FTRACE ) {
     return TriangleVIS;
   } else if (vis == VisMode::ZOOMED_OUT) {
     return 3;
@@ -680,78 +523,14 @@ bool vismodesAreInTheSamePlace(VisMode vis1, VisMode vis2) {
 }
 
 void ofApp::transitionToFrom(VisMode from, VisMode to) {
-  vis_mode = to; // the vis_mode should now be the new target mode
-  // Update the mode we're transitioning to
-  switch (to) {
-  case VisMode::WEBSERVER: {
-    web_server_vis.change_mode(); // randomly change to a different mode
-    break;
-  }
-  }
-  if (to == VisMode::ZOOMED_OUT || from == VisMode::ZOOMED_OUT ||
-      vismodesAreInTheSamePlace(from, to)) {
-    Transition t = getTransitionToFrom(from, to);
-    transition = t;
-  } else {
-    Transition t = getTransitionToFrom(from, VisMode::ZOOMED_OUT);
-    transition = t;
-    transition_chain.push_back(getTransitionToFrom(VisMode::ZOOMED_OUT, to));
-  }
-}
-
-Transition ofApp::getTransitionToFrom(VisMode from, VisMode to) {
   Transition t = Transition();
-  if (from == VisMode::ZOOMED_OUT) {
-    t.type = TransitionType::ZOOM_IN;
-    switch (to) {
-    case VisMode::WEBSERVER: {
-      t.zoom_target = triangle_positions[TriangleSERVER];
-      break;
-    }
-    case VisMode::USER: {
-      t.zoom_target = triangle_positions[TriangleUSER];
-      break;
-    }
-    case VisMode::USER_GRID: {
-      t.zoom_target = triangle_positions[TriangleUSER];
-      break;
-    }
-    case VisMode::TEXT_DEMO: {
-      t.zoom_target = triangle_positions[TriangleUSER];
-      break;
-    }
-    case VisMode::FTRACE: {
-      t.zoom_target = triangle_positions[TriangleVIS];
-      break;
-    }
-    }
-  }
-  if (to == VisMode::ZOOMED_OUT) {
-    t.type = TransitionType::ZOOM_OUT;
-    switch (from) {
-    case VisMode::WEBSERVER: {
-      t.zoom_target = triangle_positions[TriangleSERVER];
-      break;
-    }
-    case VisMode::USER: {
-      t.zoom_target = triangle_positions[TriangleUSER];
-      break;
-    }
-    case VisMode::USER_GRID: {
-      t.zoom_target = triangle_positions[TriangleUSER];
-      break;
-    }
-    case VisMode::TEXT_DEMO: {
-      t.zoom_target = triangle_positions[TriangleUSER];
-      break;
-    }
-    case VisMode::FTRACE: {
-      t.zoom_target = triangle_positions[TriangleVIS];
-      break;
-    }
-    }
-  }
+  t.type = TransitionType::DISABLE_AND_FADE;
   t.from_vis = from;
   t.to_vis = to;
-  return t;
+  transition = t;
+  if (from == VisMode::ZOOMED_OUT) {
+    overview.disable();
+  } else {
+    ftrace_vis.disable();
+  }
 }

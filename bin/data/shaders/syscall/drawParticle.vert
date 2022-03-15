@@ -18,7 +18,7 @@ void main(){
 
     gl_Position = modelViewProjectionMatrix * pos;
     
-    vertColor = vec4(clamp(0.5 - time, 0.0, 1.0), pow(time, 3.0) + clamp(-0.5 + time, 0.0, 1.0), time, pow(time, 0.125) * 0.6);
+    vertColor = vec4(clamp(0.5 - time, 0.0, 1.0), pow(time, 3.0) + clamp(-0.5 + time, 0.0, 1.0), time, pow(time, 0.5) * 0.3);
     
     gl_PointSize = 1.0;
 }

@@ -16,9 +16,9 @@ in vec2 texCoordVarying;
 layout(location = 0) out vec4 posOut;
 layout(location = 1) out vec4 velOut;
 
-const float TARGET_ACCELERATION = 0.11;
-const float NOISE_ACCELERATION = 0.15;
-const float TTL = 20.0;
+const float TARGET_ACCELERATION = 0.19;
+const float NOISE_ACCELERATION = 0.3;
+const float TTL = 5.0;
 
 float dx = 0.0;
 float dy = 0.0;
@@ -109,16 +109,17 @@ float snoise(vec3 v){
 void main(){
     int id = int(texCoordVarying.s) + int(texCoordVarying.t)*int(textureSize(particles0).x);
     vec4 pos_data = texture(particles0, texCoordVarying.st);
+    vec4 vel_data = texture(particles1, texCoordVarying.st);
+    vec2 vel = vel_data.xy;
     vec2 pos = pos_data.xy;
-    float time = pos_data.w;
+    float time = vel_data.z;
     float activated = pos_data.z;
-    vec2 vel = texture(particles1, texCoordVarying.st).xy;
 
     // TODO: Replace with branchless
         if(id >= trigger_start_id  && id < trigger_start_id + num_triggered) {
             pos = vec2(origin_pos.x, origin_pos.y)
                 + vec2(rand(vec2(float(id), pos.x)), rand(vec2(pos.y, float(id))));
-            vel = vec2(0., 0.);
+            vel = vec2(rand(vec2(float(id + 10000), pos.x)), rand(vec2(pos.y, float(id+ 20000)))) * 0.1;
             time = 0.;
             activated = 1.0;
         }
@@ -140,6 +141,6 @@ void main(){
     // vel = acc * 5.0 + vel * 0.8;
     pos += vel * activated;
     
-    posOut = vec4(pos, activated, time);
-    velOut = vec4(vel, 0.0, 0.0);
+    posOut = vec4(pos, activated, time/TTL);
+    velOut = vec4(vel, time, 0.0);
 }

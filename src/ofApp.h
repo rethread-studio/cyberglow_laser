@@ -19,17 +19,14 @@
 #include <unordered_map>
 
 enum class VisMode {
-  WEBSERVER = 0,
-  USER,
-  USER_GRID,
-  ZOOMED_OUT,
-  TEXT_DEMO,
+  ZOOMED_OUT = 0,
   FTRACE,
   LAST,
 };
 
 enum class TransitionType {
   NONE,
+  DISABLE_AND_FADE,
   SPIN,
   ZOOM_IN,
   ZOOM_OUT,
@@ -41,19 +38,19 @@ public:
   VisMode from_vis;
   VisMode to_vis;
   float phase = 0.0;
-  float duration = 10.0; // set in constructor
+  float duration = 3.0; // set in constructor
   glm::vec3 spin_axis = glm::vec3(0, 0, 1.0);
   float spin_radians = 0.0;
   glm::vec2 zoom_target = glm::vec2(0, 0);
   float zoom_distance = 4000;
 
   Transition() {
-    type = TransitionType::SPIN;
+    type = TransitionType::DISABLE_AND_FADE;
     from_vis = VisMode::ZOOMED_OUT;
-    to_vis = VisMode::WEBSERVER;
+    to_vis = VisMode::FTRACE;
     spin_axis = glm::vec3(0, 1.0, 0);
     phase = 0.0;
-    duration = 10.0;
+    duration = 3.0;
   }
 
   void update(float dt) {
@@ -177,7 +174,7 @@ public:
   void transitionToFrom(VisMode from, VisMode to);
   Transition getTransitionToFrom(VisMode from, VisMode to);
 
-  VisMode vis_mode = VisMode::ZOOMED_OUT;
+  VisMode vis_mode = VisMode::FTRACE;
   Transition transition;
   bool is_paused =
       false; // When paused, the image should be static (for photography)
@@ -202,6 +199,8 @@ public:
   int height = 1080;
   int halfh = height / 2;
 
+    ofTrueTypeFont font;
+
   float scan_x = 0.0;
   float scan_width = 100.0;
   float mouse_rel_x = 0.0;
@@ -210,23 +209,20 @@ public:
   float rot_y = 0.0;
   float rot_x = 0.0;
 
-  bool automatic_transitions = false;
+  float dt = 0.0;
+
+  bool automatic_transitions = true;
   bool use_fixed_order_transitions = true;
   bool transition_at_new_question = false;
   bool transition_at_answer = false;
   bool answer_for_current_question_received = false;
-  vector<VisMode> vis_mode_order{VisMode::FTRACE, VisMode::ZOOMED_OUT,
-                                 VisMode::USER,       VisMode::USER_GRID,
-                                 VisMode::FTRACE,     VisMode::WEBSERVER,
-                                 VisMode::TEXT_DEMO};
+    vector<VisMode> vis_mode_order{VisMode::ZOOMED_OUT, VisMode::FTRACE};
   VisMode idle_vis_mode = VisMode::FTRACE;
   bool idle_mode_on = false;
   int vis_mode_order_index = 0;
-  float next_transition_countdown = 0.0;
-  float time_per_vis = 90.0;
+  float time_per_vis = 10.0;
+  float next_transition_countdown = time_per_vis;
   vector<Transition> transition_chain;
-
-  bool dac_connected_last_frame = false;
 
   // **************** OSC ****************
   ofxOscReceiver receiver;

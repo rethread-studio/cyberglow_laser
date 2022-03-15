@@ -5,6 +5,7 @@ uniform sampler2DRect particles0;
 uniform sampler2DRect particles1;
 
 uniform float timestep;
+uniform float total_time;
 uniform int num_triggered;
 uniform int trigger_start_id;
 
@@ -27,7 +28,7 @@ float rand(vec2 co){
     return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453) * 20.0 - 10.;
 }
 
-const float TTL = 1000.0;
+const float TTL = 400.0;
 
 void main(){
     int id = int(texCoordVarying.s) + int(texCoordVarying.t)*int(textureSize(particles0).x);
@@ -47,17 +48,17 @@ void main(){
     float z = pos.z;
     
     // Dedras
-    float a = -0.9896;
+    float a = -0.9896 + (total_time * 0.001);
     float b = 1.59303;
     float c = 0.67615;
     float d = -0.5314;
     float e = 0.30705;
-    float f = 0.52351;
+    float f = 0.52351 - (total_time * 0.0015);
     float g = -0.2949;
     float h = -0.2542;
     float i = -0.7666;
 
-    float dt = timestep * 1.0;
+    float dt = timestep * 8.0;
 
     dx = (y * sin(a*x) + cos(b*y) + sin(c*z)) * dt;
     dy = (z * sin(d*x) + cos(e*y) + sin(f*z)) * dt;
