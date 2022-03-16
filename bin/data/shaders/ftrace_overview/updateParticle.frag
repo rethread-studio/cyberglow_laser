@@ -113,7 +113,7 @@ void main(){
     vec2 vel = vel_data.xy;
     vec2 pos = pos_data.xy;
     float time = vel_data.z;
-    float activated = pos_data.z;
+    float activated = vel_data.w;
 
     // TODO: Replace with branchless
         if(id >= trigger_start_id  && id < trigger_start_id + num_triggered) {
@@ -141,6 +141,6 @@ void main(){
     // vel = acc * 5.0 + vel * 0.8;
     pos += vel * activated;
     
-    posOut = vec4(pos, activated, time/TTL);
-    velOut = vec4(vel, time, 0.0);
+    posOut = vec4(pos, total_time, (time/TTL) * activated);
+    velOut = vec4(vel, time, activated);
 }

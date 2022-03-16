@@ -387,7 +387,7 @@ class Overview {
           trailShader.setUniform1f("brightnessFade", 0.998);
           trailShader.setUniform1f("brightnessFadeLow", 0);
         }
-        trailShader.setUniform2f("resolution", glm::vec2(1920.0, 1080.0));
+        trailShader.setUniform2f("resolution", glm::vec2(width, height));
         trailShader.setUniformTexture("tex0", fboScreen.getTextureReference(), 1);
         trailShader.setUniformTexture("tex1", fboFade.getTextureReference(), 2);
         // DEBUG:
@@ -437,7 +437,7 @@ class Overview {
           trailOverlayShader.setUniform1f("brightnessFade", 0.8);
           trailOverlayShader.setUniform1f("brightnessFadeLow", 0);
         }
-        trailOverlayShader.setUniform2f("resolution", glm::vec2(1920.0, 1080.0));
+        trailOverlayShader.setUniform2f("resolution", glm::vec2(width, height));
         trailOverlayShader.setUniformTexture("tex0", fboText.getTextureReference(), 1);
         trailOverlayShader.setUniformTexture("tex1", fboTextFade.getTextureReference(), 2);
         // DEBUG:

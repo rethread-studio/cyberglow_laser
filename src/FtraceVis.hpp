@@ -392,13 +392,13 @@ class FtraceVis {
     trailShader.begin();
       trailShader.setUniform1f("fadeCoeff", 1.001);
       if(enabled) {
-        trailShader.setUniform1f("brightnessFade", 1.003);
+        trailShader.setUniform1f("brightnessFade", 1.0015 - (sin(ofGetElapsedTimef() * 0.087) * 0.0025));
     trailShader.setUniform1f("brightnessFadeLow", 2.5);
       } else {
         trailShader.setUniform1f("brightnessFade", 0.998);
     trailShader.setUniform1f("brightnessFadeLow", 1.5);
       }
-      trailShader.setUniform2f("resolution", glm::vec2(1920.0, 1080.0));
+      trailShader.setUniform2f("resolution", glm::vec2(width, height));
       trailShader.setUniformTexture("tex0", fboScreen.getTextureReference(), 1);
       trailShader.setUniformTexture("tex1", fboFade.getTextureReference(), 2);
         // DEBUG:
