@@ -192,9 +192,9 @@ public:
   TextFlow text_flow;
   string current_player_trail_id = "";
   // Dimensions of the laser canvas
-  int width = 1920;
+    int width = 1280;
   int halfw = width / 2;
-  int height = 1080;
+  int height = 800;
   int halfh = height / 2;
 
     ofTrueTypeFont font;
@@ -209,7 +209,7 @@ public:
 
   float dt = 0.0;
 
-  VisMode vis_mode = VisMode::FTRACE;
+  VisMode vis_mode = VisMode::ZOOMED_OUT;
   Transition transition;
   bool automatic_transitions = true;
   bool use_fixed_order_transitions = true;

@@ -139,7 +139,7 @@ void main(){
 
     vel += acc * timestep * 60.0;
     // vel = acc * 5.0 + vel * 0.8;
-    pos += vel * activated;
+    pos += vel * activated * 0.5;
     
     posOut = vec4(pos, total_time, (time/TTL) * activated);
     velOut = vec4(vel, time, activated);

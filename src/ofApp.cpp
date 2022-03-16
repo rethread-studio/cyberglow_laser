@@ -22,7 +22,7 @@ void ofApp::setup() {
 
 
 
-  font.load("FT88-Expanded.otf", 40);
+  font.load("FT88-Expanded.otf", 20);
 
   user_grid = UserGrid(width, height);
   ftrace_vis.init(width, height);

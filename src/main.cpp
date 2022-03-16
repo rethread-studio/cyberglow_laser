@@ -5,9 +5,9 @@
 int main() {
     ofGLFWWindowSettings settings;
     settings.setGLVersion(4, 1);
-    settings.setSize(1920, 1080);
+    settings.setSize(1280, 800);
     settings.numSamples = 4;
-    // settings.windowMode = OF_GAME_MODE;
+    settings.windowMode = OF_GAME_MODE;
 
     ofCreateWindow(settings);
 

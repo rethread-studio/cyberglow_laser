@@ -188,7 +188,7 @@ class Overview {
         FlickerText("USER", triangle_positions_[TriangleUSER] + o));
 
 
-      flicker_texts[TriangleVIS].pos.x -= font.stringWidth("CORE") * 0.5 - 20;
+      flicker_texts[TriangleVIS].pos.x -= font.stringWidth("CORE") * 0.5 ;
       flicker_texts[TriangleSERVER].pos.x -= font.stringWidth("SERVER") * 0.5;
       flicker_texts[TriangleUSER].pos.x -= font.stringWidth("USER") * 0.5;
       // location_texts[TriangleUSER].pos.x += 90;
