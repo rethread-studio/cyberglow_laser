@@ -209,7 +209,7 @@ public:
 
   float dt = 0.0;
 
-  VisMode vis_mode = VisMode::ZOOMED_OUT;
+  VisMode vis_mode = VisMode::FTRACE;
   Transition transition;
   bool automatic_transitions = true;
   bool use_fixed_order_transitions = true;
