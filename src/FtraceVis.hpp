@@ -136,7 +136,7 @@ class FtraceParticleController {
         num_triggered += 1;
         if(trigger_start_id + num_triggered > total_num_particles) {
           trigger_start_id = 0;
-          cout << "Overshot total number of particles" << endl;
+          cout << "Overshot total number of particles, num_triggered: " << num_triggered << "total_num: " << total_num_particles << endl;
         }
     }
 
@@ -175,7 +175,7 @@ class FtraceVis {
     bool category_colors = false; // TODO
     float dot_on_time = 0.05;
 
-    bool enabled = true;
+    bool enabled = false;
 
 
     FtraceParticleController fpc_random;
@@ -191,7 +191,7 @@ class FtraceVis {
     float cameraDist        = 30.0;
     float cameraRotation    = 0.0;
     float cameraRotationY    = 0.0;
-    float rotAmount         = 0.005;
+    float rotAmount         = 0.002;
 
 
   FtraceVis(bool rising, int width, int height) : rising(rising) {
@@ -232,6 +232,7 @@ class FtraceVis {
       // init FtraceParticleControlllers
       fpc_syscall.init("syscall");
       fpc_random.init("random");
+      fpc_tcp.init("tcp");
     }
 
     void enable() {
@@ -294,15 +295,18 @@ class FtraceVis {
   }
 
     void trigger_particle(string ftrace_kind) {
-      if (ftrace_kind == "Random") {
-        fpc_random.trigger_particle();
-        fpc_random.trigger_particle();
-        fpc_random.trigger_particle();
-        fpc_random.trigger_particle();
-      } else if (ftrace_kind == "Syscall") {
-        fpc_syscall.trigger_particle();
-      } else if (ftrace_kind == "Tcp") {
+      if(enabled) {
+        if (ftrace_kind == "Random") {
+          fpc_random.trigger_particle();
+          fpc_random.trigger_particle();
+          // fpc_random.trigger_particle();
+          // fpc_random.trigger_particle();
+        } else if (ftrace_kind == "Syscall") {
+          fpc_syscall.trigger_particle();
+        } else if (ftrace_kind == "Tcp") {
+          fpc_tcp.trigger_particle();
       } else if (ftrace_kind == "IrqMatrix") {
+        }
       }
     }
 
@@ -310,8 +314,15 @@ class FtraceVis {
       for (auto &es : event_stats) {
         es.second.update(dt);
       }
-        fpc_random.trigger_particle();
-        fpc_random.trigger_particle();
+        // fpc_random.trigger_particle();
+        // fpc_random.trigger_particle();
+        fpc_tcp.trigger_particle();
+        // fpc_tcp.trigger_particle();
+        // fpc_tcp.trigger_particle();
+        // fpc_tcp.trigger_particle();
+        // fpc_tcp.trigger_particle();
+        // fpc_tcp.trigger_particle();
+        // fpc_tcp.trigger_particle();
 
       cam->lookAt(ofVec3f(0.0, 0.0, 0.0));
       cam->setPosition(cameraDist*sin(cameraRotation),
@@ -319,10 +330,11 @@ class FtraceVis {
                        cameraDist*cos(cameraRotation));
 
       cameraRotation += rotAmount;
-      cameraRotationY += rotAmount * 2.0;
+      cameraRotationY += rotAmount * 0.6;
 
       fpc_random.update(dt);
       fpc_syscall.update(dt);
+      fpc_tcp.update(dt);
 
   }
 
@@ -355,6 +367,7 @@ class FtraceVis {
     glm::mat4 modelViewProjectionMatrix = cam->getModelViewProjectionMatrix();
     fpc_syscall.draw(modelViewProjectionMatrix);
     fpc_random.draw(modelViewProjectionMatrix);
+    fpc_tcp.draw(modelViewProjectionMatrix);
 
     //debug box drawing
     // ofSetColor(0, 255, 0);
@@ -377,12 +390,12 @@ class FtraceVis {
     ofSetColor(255, 30);
     // draw the diff image to the mask with extreme contrast and in greyscale using the maskFilterShader
     trailShader.begin();
-      trailShader.setUniform1f("fadeCoeff", 0.99);
+      trailShader.setUniform1f("fadeCoeff", 1.001);
       if(enabled) {
-        trailShader.setUniform1f("brightnessFade", 0.999);
-    trailShader.setUniform1f("brightnessFadeLow", 1.5);
+        trailShader.setUniform1f("brightnessFade", 1.003);
+    trailShader.setUniform1f("brightnessFadeLow", 2.5);
       } else {
-        trailShader.setUniform1f("brightnessFade", 0.99);
+        trailShader.setUniform1f("brightnessFade", 0.998);
     trailShader.setUniform1f("brightnessFadeLow", 1.5);
       }
       trailShader.setUniform2f("resolution", glm::vec2(1920.0, 1080.0));

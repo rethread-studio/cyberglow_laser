@@ -54,5 +54,5 @@ void main()
   // float alpha = 1.0;
   // color = vec3(st.xy, 1.0);
 
-  outputColor = vec4(color, alpha * 0.99);
+  outputColor = vec4(color, alpha);
 }

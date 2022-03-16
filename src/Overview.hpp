@@ -136,7 +136,9 @@ class Overview {
     glm::vec2 triangle_positions[3];
     vector<LaserText> location_texts;
     vector<FlickerText> flicker_texts;
-    bool enabled = true;
+    bool enabled = false;
+
+    bool enable_flicker_labels = true;
 
     bool finished_init = false;
     int text_index = 0;
@@ -149,7 +151,10 @@ class Overview {
 
     ofFbo fboScreen;
     ofFbo fboFade;
+    ofFbo fboText;
+    ofFbo fboTextFade;
     ofShader trailShader;
+    ofShader trailOverlayShader; // makes dark things transparent
     ofEasyCam* cam;
     float cameraDist        = 1000.0;
     float cameraRotation    = 0.0;
@@ -161,13 +166,13 @@ class Overview {
 
   }
 
-    void init(glm::vec2 triangle_positions_[3], int width, int height) {
+    void init(glm::vec2 triangle_positions_[3], int width, int height, ofTrueTypeFont& font) {
 
 
       LaserTextOptions options;
       options.size = 40.0;
       options.color = ofColor(255, 0, 255);
-      glm::vec2 o = glm::vec2(-10, 10);
+      glm::vec2 o = glm::vec2(0, 0);
       location_texts.push_back(LaserText("VISUALISATION", options, 4,
                                          triangle_positions[TriangleVIS] + o));
       location_texts.push_back(LaserText("SERVER", options, 3,
@@ -175,7 +180,7 @@ class Overview {
       location_texts.push_back(
         LaserText("USER", options, 3, triangle_positions[TriangleUSER] + o));
 
-      flicker_texts.push_back(FlickerText("VISUALISATION",
+      flicker_texts.push_back(FlickerText("CORE",
                                          triangle_positions_[TriangleVIS] + o));
       flicker_texts.push_back(FlickerText("SERVER",
                                          triangle_positions_[TriangleSERVER] + o));
@@ -183,6 +188,9 @@ class Overview {
         FlickerText("USER", triangle_positions_[TriangleUSER] + o));
 
 
+      flicker_texts[TriangleVIS].pos.x -= font.stringWidth("CORE") * 0.5 - 20;
+      flicker_texts[TriangleSERVER].pos.x -= font.stringWidth("SERVER") * 0.5;
+      flicker_texts[TriangleUSER].pos.x -= font.stringWidth("USER") * 0.5;
       // location_texts[TriangleUSER].pos.x += 90;
       // location_texts[TriangleVIS].pos.x -=
       //     location_texts[TriangleVIS].get_width() + 20;
@@ -208,8 +216,17 @@ class Overview {
       fboFade.begin();
       ofClear(0.0);
       fboFade.end();
+      fboText.allocate(width, height, GL_RGBA);
+      fboText.begin();
+      ofClear(0.0);
+      fboText.end();
+      fboTextFade.allocate(width, height, GL_RGBA32F);
+      fboTextFade.begin();
+      ofClear(0.0);
+      fboTextFade.end();
 
       trailShader.load("shaders/trail/shader");
+      trailOverlayShader.load("shaders/trail_overlay/shader");
 
       // init camera for particle system
 
@@ -230,6 +247,7 @@ class Overview {
     void enable() {
       cout << "enable overview" << endl;
 
+      enable_flicker_labels = true;
       enabled = true;
       // remove trails
       fboScreen.begin();
@@ -238,7 +256,9 @@ class Overview {
       fboFade.begin();
       ofClear(0.0);
       fboFade.end();
-
+      fboText.begin();
+      ofClear(0.0);
+      fboText.end();
       opc_ftrace.reset();
       opc_server_to_user.reset();
       opc_server_to_vis.reset();
@@ -300,18 +320,20 @@ class Overview {
   }
 
     void trigger_activity(int source) {
-      switch(source) {
-        case TriangleUSER:
-          opc_user.trigger_particle();
-          break;
-        case TriangleSERVER:
-          opc_server_to_user.trigger_particle();
-          opc_server_to_vis.trigger_particle();
-          // opc_user.trigger_particle();
-          break;
-        case TriangleVIS:
-          opc_ftrace.trigger_particle();
-          break;
+      if(enabled) {
+        switch(source) {
+          case TriangleUSER:
+            opc_user.trigger_particle();
+            break;
+          case TriangleSERVER:
+            opc_server_to_user.trigger_particle();
+            opc_server_to_vis.trigger_particle();
+            // opc_user.trigger_particle();
+            break;
+          case TriangleVIS:
+            opc_ftrace.trigger_particle();
+            break;
+        }
       }
     }
 
@@ -343,7 +365,6 @@ class Overview {
 
       cam->end();
     }
-    ofTranslate(width*0.5, height*0.5, 0);
 
     // font.drawString("TEST test Server", 0, 0);
     fboScreen.end();
@@ -359,11 +380,12 @@ class Overview {
 
         trailShader.setUniform1f("fadeCoeff", 1.0);
         if(enabled) {
-          trailShader.setUniform1f("brightnessFade", 0.9995);
-    trailShader.setUniform1f("brightnessFadeLow", 2.4);
+          // trailShader.setUniform1f("brightnessFade", 0.9995);
+          trailShader.setUniform1f("brightnessFade", 0.9995 + sin(ofGetElapsedTimef() * 1.2) * 0.002 + 0.002);
+          trailShader.setUniform1f("brightnessFadeLow", 2.4);
         } else {
-          trailShader.setUniform1f("brightnessFade", 0.99);
-    trailShader.setUniform1f("brightnessFadeLow", 0);
+          trailShader.setUniform1f("brightnessFade", 0.998);
+          trailShader.setUniform1f("brightnessFadeLow", 0);
         }
         trailShader.setUniform2f("resolution", glm::vec2(1920.0, 1080.0));
         trailShader.setUniformTexture("tex0", fboScreen.getTextureReference(), 1);
@@ -380,19 +402,62 @@ class Overview {
     // ofDisableBlendMode();
     fboFade.draw(width*-0.5, height*-0.5, width, height);
     // fboScreen.draw(width*-0.5, height*-0.5, width, height);
-    for(auto& ft : flicker_texts) {
-      ft.draw(font);
+    // for(auto& ft : flicker_texts) {
+    //   ft.draw(font);
+    // }
+
+    if(enable_flicker_labels && ofRandom(0.0, 1.0) > 0.97) {
+      cout << "disable flicker labels" << endl;
+      enable_flicker_labels = false;
+    } else if(!enable_flicker_labels && ofRandom(0.0, 1.0) > 0.995) {
+      cout << "enable flicker labels" << endl;
+      enable_flicker_labels = true;
     }
+
+    fboText.begin();
+    ofClear(0.0);
+      ofTranslate(width*0.5, height*0.5, 0);
+      if(enable_flicker_labels && ofRandom(0.0, 1.0) > 0.8) {
+        draw_text(font);
+      }
+    fboText.end();
+    fboTextFade.begin();
+    ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+    // ofSetColor(ofFloatColor(0.0, 0.0, 0.0, 1.1));
+    // ofRect(0, 0, 1920, 1080);
+      ofSetColor(255, 30);
+      // draw the diff image to the mask with extreme contrast and in greyscale using the maskFilterShader
+      trailOverlayShader.begin();
+
+        trailOverlayShader.setUniform1f("fadeCoeff", 1.04);
+        if(enabled) {
+          trailOverlayShader.setUniform1f("brightnessFade", 0.83);
+          trailOverlayShader.setUniform1f("brightnessFadeLow", 2.6);
+        } else {
+          trailOverlayShader.setUniform1f("brightnessFade", 0.8);
+          trailOverlayShader.setUniform1f("brightnessFadeLow", 0);
+        }
+        trailOverlayShader.setUniform2f("resolution", glm::vec2(1920.0, 1080.0));
+        trailOverlayShader.setUniformTexture("tex0", fboText.getTextureReference(), 1);
+        trailOverlayShader.setUniformTexture("tex1", fboTextFade.getTextureReference(), 2);
+        // DEBUG:
+        //maskFilterShader.setUniform2f("mouse", float(ofGetMouseX())/float(ofGetWidth()), float(ofGetMouseY())/float(ofGetHeight()));
+        ofSetColor(255, 255);
+        fboText.draw(0, 0);
+        // ofRect(0, 0, 1920, 1080);
+      trailOverlayShader.end();
+    fboTextFade.end();
+
+    ofSetColor(255, 150);
+    fboTextFade.draw(width*-0.5, height*-0.5, width, height);
 
   }
 
   void draw_text(ofTrueTypeFont& font) {
-    // for(auto& text : location_texts) {
-    //     text.draw(laser);
-    // }
-    auto& lt = location_texts[text_index];
-    ofSetColor(100);
-    font.drawString(lt.text, lt.pos.x, lt.pos.y);
+    ofSetColor(200);
+    for(auto& lt: flicker_texts) {
+      font.drawString(lt.text, lt.pos.x, lt.pos.y);
+    }
   }
 };
 

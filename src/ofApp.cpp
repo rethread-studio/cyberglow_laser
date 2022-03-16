@@ -26,7 +26,7 @@ void ofApp::setup() {
 
   user_grid = UserGrid(width, height);
   ftrace_vis.init(width, height);
-  overview.init(triangle_positions, width, height);
+  overview.init(triangle_positions, width, height, font);
   text_flow = TextFlow(width, height);
   transition.type = TransitionType::NONE; // disable the transition at startup
 
@@ -44,6 +44,15 @@ void ofApp::setup() {
   // glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh + (text_options.size *
   // 2))));
   //
+
+  switch(vis_mode) {
+    case VisMode::FTRACE:
+      ftrace_vis.enable();
+      break;
+    case VisMode::ZOOMED_OUT:
+      overview.enable();
+      break;
+  }
   ofBackground(0);
 }
 
