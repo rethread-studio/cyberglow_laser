@@ -192,9 +192,9 @@ public:
   TextFlow text_flow;
   string current_player_trail_id = "";
   // Dimensions of the laser canvas
-    int width = 1280;
+    int width = 1920;
   int halfw = width / 2;
-  int height = 800;
+  int height = 1080;
   int halfh = height / 2;
 
     ofTrueTypeFont font;

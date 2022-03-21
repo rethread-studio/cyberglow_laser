@@ -37,7 +37,7 @@ void main(){
 
     // TODO: Replace with branchless
         if(id >= trigger_start_id  && id < trigger_start_id + num_triggered) {
-            pos = vec3(rand(pos.xy), rand(pos.zy), rand(pos.xz)) * 0.5;
+            pos = vec3(rand(pos.xy), rand(pos.zy), rand(pos.xz));
             time = vec3(TTL, 0.0, 0.0);
         }
     time.x -= 1.0;
