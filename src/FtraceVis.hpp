@@ -314,8 +314,14 @@ class FtraceVis {
       for (auto &es : event_stats) {
         es.second.update(dt);
       }
-        // fpc_random.trigger_particle();
-        // fpc_random.trigger_particle();
+        fpc_syscall.trigger_particle();
+        fpc_syscall.trigger_particle();
+        fpc_syscall.trigger_particle();
+        fpc_syscall.trigger_particle();
+        fpc_syscall.trigger_particle();
+        fpc_syscall.trigger_particle();
+        fpc_random.trigger_particle();
+        fpc_random.trigger_particle();
         fpc_tcp.trigger_particle();
         // fpc_tcp.trigger_particle();
         // fpc_tcp.trigger_particle();
