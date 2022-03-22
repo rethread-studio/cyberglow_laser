@@ -137,6 +137,7 @@ class Overview {
     vector<LaserText> location_texts;
     vector<FlickerText> flicker_texts;
     bool enabled = false;
+    float time_since_enabled = 0.0;
 
     bool enable_flicker_labels = true;
 
@@ -189,8 +190,8 @@ class Overview {
 
 
       flicker_texts[TriangleVIS].pos.x -= font.stringWidth("CORE") * 0.5 ;
-      flicker_texts[TriangleSERVER].pos.x -= font.stringWidth("SERVER") * 0.5;
-      flicker_texts[TriangleUSER].pos.x -= font.stringWidth("USER") * 0.5;
+      flicker_texts[TriangleSERVER].pos.x -= font.stringWidth("CLOUD") * 0.5;
+      flicker_texts[TriangleUSER].pos.x -= font.stringWidth("PLAYER") * 0.5;
       // location_texts[TriangleUSER].pos.x += 90;
       // location_texts[TriangleVIS].pos.x -=
       //     location_texts[TriangleVIS].get_width() + 20;
@@ -263,6 +264,7 @@ class Overview {
       opc_server_to_user.reset();
       opc_server_to_vis.reset();
       opc_user.reset();
+time_since_enabled = 0.0;
     }
     void disable() {
       cout << "disable overview" << endl;
@@ -297,10 +299,11 @@ class Overview {
   }
 
   void update(float dt) {
-      // for(auto& text : location_texts) {
-      //     text.update();
-      // }
-      location_texts[text_index].update();
+    time_since_enabled += dt;
+    // for(auto& text : location_texts) {
+    //     text.update();
+    // }
+    location_texts[text_index].update();
       if (location_texts[text_index].resetFrame) {
         text_index = (text_index + 1) % location_texts.size();
       }
@@ -337,7 +340,7 @@ class Overview {
       }
     }
 
-  void draw(int width, int height, ofTrueTypeFont& font) {
+  void draw(int width, int height, ofTrueTypeFont& font, ofTrueTypeFont& large_font) {
     ofPushMatrix();
     fboScreen.begin();
     ofClear(0, 0, 0);
@@ -450,6 +453,11 @@ class Overview {
 
     ofSetColor(255, 150);
     fboTextFade.draw(width*-0.5, height*-0.5, width, height);
+    if(time_since_enabled < 10.0) {
+      draw_title(width, height, large_font);
+    } else if(time_since_enabled > 20.0 && time_since_enabled < 30.0) {
+      draw_geography(large_font);
+    }
 
   }
 
@@ -459,6 +467,31 @@ class Overview {
       font.drawString(lt.text, lt.pos.x, lt.pos.y);
     }
   }
+
+    void draw_geography(ofTrueTypeFont& font) {
+      ofSetColor(255);
+      ofPushMatrix();
+      ofRotateRad(0.25);
+      ofTranslate(0, -50, 0);
+      font.drawString("Amsterdam", -500, -80);
+      ofDrawRectangle(glm::vec2(-1200, 0), 2400, 4);
+      font.drawString("Stockholm", -400, 120);
+
+      ofPopMatrix();
+    }
+    void draw_title(int width, int height, ofTrueTypeFont& font) {
+      int margin = width * 0.05;
+      ofSetColor(255);
+      ofNoFill();
+      ofSetLineWidth(5);
+      ofDrawRectangle(glm::vec2(width*-0.5 + margin, height*-0.5 + margin), width - (margin*2), height - (margin * 2));
+      font.drawString("NETWORK", -100, height * 0.5 - margin - 30);
+      ofPushMatrix();
+      ofRotateRad(PI);
+      font.drawString("NETWORK", -100, height * 0.5 - margin - 30);
+
+      ofPopMatrix();
+    }
 };
 
 

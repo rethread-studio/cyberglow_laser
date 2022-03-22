@@ -23,6 +23,7 @@ void ofApp::setup() {
 
 
   font.load("FT88-Expanded.otf", 20);
+  large_font.load("FT88-Expanded.otf", 60);
 
   user_grid = UserGrid(width, height);
   ftrace_vis.init(width, height);
@@ -368,7 +369,7 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
 
   switch (vis) {
   case VisMode::FTRACE: {
-    ftrace_vis.draw(width, height);
+    ftrace_vis.draw(width, height, large_font);
     break;
   }
   case VisMode::ZOOMED_OUT: {
@@ -398,7 +399,7 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
     //     ap.draw(scale);
     //   }
     // }
-    overview.draw(width, height, font);
+    overview.draw(width, height, font, large_font);
     break;
   }
   }

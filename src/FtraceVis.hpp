@@ -176,6 +176,7 @@ class FtraceVis {
     float dot_on_time = 0.05;
 
     bool enabled = false;
+    float time_since_enabled = 0;
 
 
     FtraceParticleController fpc_random;
@@ -248,6 +249,7 @@ class FtraceVis {
       fpc_random.reset();
       fpc_irq.reset();
       fpc_tcp.reset();
+      time_since_enabled = 0;
     }
 
     void disable() {
@@ -311,6 +313,7 @@ class FtraceVis {
     }
 
     void update(float dt) {
+      time_since_enabled += dt;
       for (auto &es : event_stats) {
         es.second.update(dt);
       }
@@ -344,7 +347,7 @@ class FtraceVis {
 
   }
 
-  void draw(int width, int height) {
+  void draw(int width, int height, ofTrueTypeFont& large_font) {
     if (rising) {
 
       for (auto &es : event_stats) {
@@ -416,7 +419,23 @@ class FtraceVis {
 
     ofSetColor(255);
     fboFade.draw(width*-0.5, height*-0.5, width, height);
+    if(time_since_enabled < 10.0) {
+      draw_title(width, height, large_font);
+    }
   }
+    void draw_title(int width, int height, ofTrueTypeFont& font) {
+      int margin = width * 0.05;
+      ofSetColor(255);
+      ofNoFill();
+      ofSetLineWidth(5);
+      ofDrawRectangle(glm::vec2(width*-0.5 + margin, height*-0.5 + margin), width - (margin*2), height - (margin * 2));
+      font.drawString("CORE", -100, height * 0.5 - margin - 30);
+      ofPushMatrix();
+      ofRotateRad(PI);
+      font.drawString("CORE", -100, height * 0.5 - margin - 30);
+
+      ofPopMatrix();
+    }
 };
 
 #endif

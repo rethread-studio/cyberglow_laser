@@ -50,7 +50,7 @@ public:
     to_vis = VisMode::FTRACE;
     spin_axis = glm::vec3(0, 1.0, 0);
     phase = 0.0;
-    duration = 10.0;
+    duration = 6.0;
   }
 
   void update(float dt) {
@@ -198,6 +198,7 @@ public:
   int halfh = height / 2;
 
     ofTrueTypeFont font;
+    ofTrueTypeFont large_font;
 
   float scan_x = 0.0;
   float scan_width = 100.0;
@@ -209,7 +210,7 @@ public:
 
   float dt = 0.0;
 
-  VisMode vis_mode = VisMode::FTRACE;
+  VisMode vis_mode = VisMode::ZOOMED_OUT;
   Transition transition;
   bool automatic_transitions = true;
   bool use_fixed_order_transitions = true;
@@ -220,7 +221,7 @@ public:
   VisMode idle_vis_mode = VisMode::FTRACE;
   bool idle_mode_on = false;
   int vis_mode_order_index = 0;
-  float time_per_vis = 120.0;
+  float time_per_vis = 40.0;
   float next_transition_countdown = time_per_vis;
   vector<Transition> transition_chain;
 
