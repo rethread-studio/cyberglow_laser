@@ -453,11 +453,13 @@ time_since_enabled = 0.0;
 
     ofSetColor(255, 150);
     fboTextFade.draw(width*-0.5, height*-0.5, width, height);
-    if(time_since_enabled < 10.0) {
-      draw_title(width, height, large_font);
-    } else if(time_since_enabled > 20.0 && time_since_enabled < 30.0) {
+
       draw_geography(large_font);
-    }
+    // if(time_since_enabled < 10.0) {
+    //   draw_title(width, height, large_font);
+    // } else if(time_since_enabled > 20.0 && time_since_enabled < 30.0) {
+    //   draw_geography(large_font);
+    // }
 
   }
 
@@ -469,13 +471,26 @@ time_since_enabled = 0.0;
   }
 
     void draw_geography(ofTrueTypeFont& font) {
+      static float line_rotation = 0.0;
+      static float line_y = 0.0;
+      static float line_y_vel = ofRandom(-1.0, 1.0);
+      static float line_rotation_vel = ofRandom(-0.001, 0.001);
+      if(ofRandom(0.0, 1) > 0.9) {
+        line_rotation_vel = ofRandom(-0.001, 0.001);
+      }
+      if(ofRandom(0.0, 1) > 0.9) {
+        line_y_vel = ofRandom(-1.0, 1.0);
+      }
+      line_rotation += line_rotation_vel;
+      line_y += line_y_vel;
       ofSetColor(255);
       ofPushMatrix();
-      ofRotateRad(0.25);
+      ofRotateRad(0.15);
       ofTranslate(0, -50, 0);
-      font.drawString("Amsterdam", -500, -80);
-      ofDrawRectangle(glm::vec2(-1200, 0), 2400, 4);
-      font.drawString("Stockholm", -400, 120);
+      font.drawString("Amsterdam", -700, -150);
+      font.drawString("Stockholm", -450, 380);
+      // ofRotateRad(line_rotation);
+      // ofDrawRectangle(glm::vec2(-1200, line_y), 2400, 4);
 
       ofPopMatrix();
     }
