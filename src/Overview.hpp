@@ -336,6 +336,15 @@ public:
     opc_ftrace.update(dt);
     opc_server_to_user.update(dt);
     opc_server_to_vis.update(dt);
+
+    cam->lookAt(ofVec3f(0.0, 0.0, 0.0));
+    cam->setPosition(cameraDist * sin(cameraRotation),
+                     cameraDist * sin(cameraRotationY),
+                     cameraDist * cos(cameraRotation));
+
+    cameraRotation =
+        ofNoise(glm::vec2(ofGetElapsedTimef() * 0.1, 100.)) * 0.5 - 0.25;
+    // cameraRotationY += rotAmount * 0.6;
   }
 
   void register_ftrace_trigger(string type) { enable_labels_trigger = true; }
