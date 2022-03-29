@@ -35,6 +35,8 @@ Project{
             'ofxOpenCv',
             'ofxOsc',
             'ofxPoco',
+            'ofxFastParticleSystem',
+            'ofxSvg',
         ]
 
         // additional flags for the project. the of module sets some

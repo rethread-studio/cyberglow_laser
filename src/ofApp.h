@@ -170,6 +170,9 @@ public:
   void drawTransition(Transition transition_);
   void drawVisualisation(VisMode vis, float scale);
 
+  void transition_from_current_visualisation(float transition_time);
+  void enable_next_visualisation();
+
   void activateTransitionToNext();
   void transitionToFrom(VisMode from, VisMode to);
   Transition getTransitionToFrom(VisMode from, VisMode to);
@@ -192,13 +195,13 @@ public:
   TextFlow text_flow;
   string current_player_trail_id = "";
   // Dimensions of the laser canvas
-    int width = 1920;
+  int width = 1920;
   int halfw = width / 2;
   int height = 1080;
   int halfh = height / 2;
 
-    ofTrueTypeFont font;
-    ofTrueTypeFont large_font;
+  ofTrueTypeFont font;
+  ofTrueTypeFont large_font;
 
   float scan_x = 0.0;
   float scan_width = 100.0;
@@ -210,18 +213,19 @@ public:
 
   float dt = 0.0;
 
-  VisMode vis_mode = VisMode::ZOOMED_OUT;
+  VisMode vis_mode = VisMode::FTRACE;
   Transition transition;
-  bool automatic_transitions = true;
+  bool visualisation_enabled = true;
+  bool automatic_transitions = false;
   bool use_fixed_order_transitions = true;
   bool transition_at_new_question = false;
   bool transition_at_answer = false;
   bool answer_for_current_question_received = false;
-    vector<VisMode> vis_mode_order{VisMode::ZOOMED_OUT, VisMode::FTRACE};
+  vector<VisMode> vis_mode_order{VisMode::ZOOMED_OUT, VisMode::FTRACE};
   VisMode idle_vis_mode = VisMode::FTRACE;
   bool idle_mode_on = false;
   int vis_mode_order_index = 0;
-  float time_per_vis = 40.0;
+  float time_per_vis = 90.0;
   float next_transition_countdown = time_per_vis;
   vector<Transition> transition_chain;
 

@@ -1,7 +1,6 @@
-ofxLaser
-ofxOsc
-ofxSvg
 ofxNetwork
 ofxOpenCv
+ofxOsc
 ofxPoco
 ofxFastParticleSystem
+ofxSvg

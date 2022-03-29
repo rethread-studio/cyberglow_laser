@@ -20,8 +20,6 @@ void ofApp::setup() {
         glm::vec2(i * (width / 3) - halfw, -halfh), width / 3, height));
   }
 
-
-
   font.load("FT88-Expanded.otf", 20);
   large_font.load("FT88-Expanded.otf", 60);
 
@@ -46,13 +44,13 @@ void ofApp::setup() {
   // 2))));
   //
 
-  switch(vis_mode) {
-    case VisMode::FTRACE:
-      ftrace_vis.enable();
-      break;
-    case VisMode::ZOOMED_OUT:
-      overview.enable();
-      break;
+  switch (vis_mode) {
+  case VisMode::FTRACE:
+    ftrace_vis.enable();
+    break;
+  case VisMode::ZOOMED_OUT:
+    overview.enable();
+    break;
   }
   ofBackground(0);
 }
@@ -89,7 +87,7 @@ void ofApp::update() {
     //   transitionToFrom(vis_mode, vis_mode);
     // }
 
-  switch (vis_mode) {
+    switch (vis_mode) {
     case VisMode::FTRACE: {
       ftrace_vis.update(dt);
       break;
@@ -98,14 +96,12 @@ void ofApp::update() {
       overview.update(dt);
       break;
     }
-  }
-
+    }
 
     noise_counter += 0.001;
     rot_x = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01) * 2.0 - 1.0;
     rot_y =
         ofNoise(noise_counter, ofGetElapsedTimef() * 0.01 + 2534.0) * 2.0 - 1.0;
-
   }
 }
 
@@ -123,20 +119,20 @@ void ofApp::draw() {
 
   if (transition.active()) {
     transition.update(dt);
-    if(!transition.active()) {
+    if (!transition.active()) {
       cout << "transition was just finished, activate" << endl;
       vis_mode = transition.to_vis;
-      switch(vis_mode) {
-        case VisMode::FTRACE:
-          ftrace_vis.enable();
-          break;
-        case VisMode::ZOOMED_OUT:
-          overview.enable();
-          break;
+      switch (vis_mode) {
+      case VisMode::FTRACE:
+        ftrace_vis.enable();
+        break;
+      case VisMode::ZOOMED_OUT:
+        overview.enable();
+        break;
       }
     }
   }
-      drawVisualisation(vis_mode, 1.0);
+  drawVisualisation(vis_mode, 1.0);
 
   ofPopMatrix();
   // sends points to the DAC
@@ -146,44 +142,44 @@ void ofApp::addActivityPoint(int source) {
   if (source >= 3) {
     return;
   }
-/*if (source != TriangleVIS) {
-    float offset_angle = ofRandom(0, TWO_PI);
-    float offset = ofRandom(0, width * 0.07);
-    glm::vec2 position =
-        triangle_positions[source] -
-        glm::vec2(cos(offset_angle) * offset, sin(offset_angle) * offset);
-    auto ap = ActivityPoint(position, glm::vec2(0, 0), ofColor::green);
-    glm::vec2 destination = glm::vec2(0, 0);
-    switch (source) {
-    case 0:
-      destination = triangle_positions[1]; bb
-      break;
-    case 1:
-      if (ofRandom(0, 1) > 0.5) {
-        destination = triangle_positions[0];
-      } else {
-        destination = triangle_positions[2];
+  /*if (source != TriangleVIS) {
+      float offset_angle = ofRandom(0, TWO_PI);
+      float offset = ofRandom(0, width * 0.07);
+      glm::vec2 position =
+          triangle_positions[source] -
+          glm::vec2(cos(offset_angle) * offset, sin(offset_angle) * offset);
+      auto ap = ActivityPoint(position, glm::vec2(0, 0), ofColor::green);
+      glm::vec2 destination = glm::vec2(0, 0);
+      switch (source) {
+      case 0:
+        destination = triangle_positions[1]; bb
+        break;
+      case 1:
+        if (ofRandom(0, 1) > 0.5) {
+          destination = triangle_positions[0];
+        } else {
+          destination = triangle_positions[2];
+        }
+        break;
+      case 2:
+        destination = triangle_positions[1];
+        break;
       }
-      break;
-    case 2:
-      destination = triangle_positions[1];
-      break;
+      float vel_amp = ofRandom(0.5, 4.0);
+      ap.launch_towards(destination, vel_amp);
+      ap.grow(ofRandom(0.0, 0.5));
+      activity_points.push_back(ap);
+      while (activity_points.size() > max_num_activity_points) {
+        activity_points.erase(activity_points.begin());
+      }
     }
-    float vel_amp = ofRandom(0.5, 4.0);
-    ap.launch_towards(destination, vel_amp);
-    ap.grow(ofRandom(0.0, 0.5));
-    activity_points.push_back(ap);
-    while (activity_points.size() > max_num_activity_points) {
-      activity_points.erase(activity_points.begin());
+    float activity_level_increase = 0.1;
+    if (source == TriangleVIS) {
+      activity_level_increase = 0.00006;
     }
-  }
-  float activity_level_increase = 0.1;
-  if (source == TriangleVIS) {
-    activity_level_increase = 0.00006;
-  }
-  triangle_activity[source] += activity_level_increase;
+    triangle_activity[source] += activity_level_increase;
 
-  }*/
+    }*/
   overview.trigger_activity(source);
 }
 
@@ -225,19 +221,15 @@ void ofApp::checkOscMessages() {
         ftrace_vis.register_event(m.getArgAsString(0));
         // cout << "ftrace: " << m.getArgAsString(0) << endl;
         addActivityPoint(TriangleVIS);
-      }
-
-      else if (m.getAddress() == "/idle") {
-        // cout << "/idle: " << m.getArgAsString(0) << endl;
-        auto arg = m.getArgAsString(0);
-        if (arg == "on") {
-          idle_mode_on = true;
-          transition_chain.clear();
-          transitionToFrom(vis_mode, idle_vis_mode);
+      } else if (m.getAddress() == "/ftrace_trigger") {
+        overview.register_ftrace_trigger(m.getArgAsString(0));
+        ftrace_vis.register_ftrace_trigger(m.getArgAsString(0));
+      } else if (m.getAddress() == "/transition") {
+        float time_to_next_transition = m.getArgAsFloat(0);
+        if (visualisation_enabled) {
+          transition_from_current_visualisation(time_to_next_transition);
         } else {
-          // off
-          idle_mode_on = false;
-          transitionToFrom(idle_vis_mode, VisMode::ZOOMED_OUT);
+          enable_next_visualisation();
         }
       } else {
         // cout << "Received unknown message to " << m.getAddress() << endl;
@@ -245,6 +237,32 @@ void ofApp::checkOscMessages() {
       }
     }
   }
+}
+
+void ofApp::transition_from_current_visualisation(float transition_time) {
+  visualisation_enabled = false;
+  switch (vis_mode) {
+  case VisMode::ZOOMED_OUT:
+    overview.disable(transition_time);
+    break;
+  case VisMode::FTRACE:
+    ftrace_vis.disable(transition_time);
+    break;
+  }
+}
+void ofApp::enable_next_visualisation() {
+
+  switch (vis_mode) {
+  case VisMode::ZOOMED_OUT:
+    vis_mode = VisMode::FTRACE;
+    ftrace_vis.enable();
+    break;
+  case VisMode::FTRACE:
+    vis_mode = VisMode::ZOOMED_OUT;
+    overview.enable();
+    break;
+  }
+  visualisation_enabled = true;
 }
 
 void ofApp::parseOscMessage(string origin, string action, string arguments) {
@@ -520,7 +538,7 @@ void ofApp::gotMessage(ofMessage msg) {}
 void ofApp::dragEvent(ofDragInfo dragInfo) {}
 
 int visModeCategory(VisMode vis) {
-  if (vis == VisMode::FTRACE ) {
+  if (vis == VisMode::FTRACE) {
     return TriangleVIS;
   } else if (vis == VisMode::ZOOMED_OUT) {
     return 3;
@@ -539,8 +557,8 @@ void ofApp::transitionToFrom(VisMode from, VisMode to) {
   t.to_vis = to;
   transition = t;
   if (from == VisMode::ZOOMED_OUT) {
-    overview.disable();
+    overview.disable(3.0);
   } else {
-    ftrace_vis.disable();
+    ftrace_vis.disable(3.0);
   }
 }
