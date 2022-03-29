@@ -16,8 +16,9 @@ in vec2 texCoordVarying;
 layout(location = 0) out vec4 posOut;
 layout(location = 1) out vec4 velOut;
 
-const float TARGET_ACCELERATION = 0.19;
-const float NOISE_ACCELERATION = 0.3;
+const float TARGET_ACCELERATION = 0.23;
+// const float NOISE_ACCELERATION = 0.3;
+const float NOISE_ACCELERATION = 0.01;
 const float TTL = 5.0;
 
 float dx = 0.0;
@@ -25,7 +26,7 @@ float dy = 0.0;
 float dz = 0.0;
 
 float rand(vec2 co){
-    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453) * 100.0 - 50.0;
+    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453) * 50.0 - 25.0;
 }
 float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
 
@@ -106,6 +107,7 @@ float snoise(vec3 v){
                                 dot(p2,x2), dot(p3,x3) ) );
 }
 
+const float PI = 3.14159;
 void main(){
     int id = int(texCoordVarying.s) + int(texCoordVarying.t)*int(textureSize(particles0).x);
     vec4 pos_data = texture(particles0, texCoordVarying.st);
@@ -117,9 +119,12 @@ void main(){
 
     // TODO: Replace with branchless
         if(id >= trigger_start_id  && id < trigger_start_id + num_triggered) {
-            pos = vec2(origin_pos.x, origin_pos.y)
-                + vec2(rand(vec2(float(id), pos.x)), rand(vec2(pos.y, float(id))));
-            vel = vec2(rand(vec2(float(id + 10000), pos.x)), rand(vec2(pos.y, float(id+ 20000)))) * 0.1;
+            float clock_angle = floor(total_time) * PI*(1.0/(sin(total_time)*20.0 + 20.)) * 3.0 + id* 0.000005;
+            vec2 clock_pos = vec2(cos(clock_angle), sin(clock_angle)) * 200.0;
+            pos = vec2(origin_pos.x, origin_pos.y) + clock_pos;
+            // vel = vec2(rand(vec2(float(id + 10000), pos.x)), rand(vec2(pos.y, float(id+ 20000)))) * 0.1;
+            vel = vec2(0.)
+                + vec2(rand(vec2(float(id) * 0.01, pos.x)), rand(vec2(pos.y, float(id)*0.01))) * 0.3;
             time = 0.;
             activated = 1.0;
         }
@@ -129,18 +134,19 @@ void main(){
     float dist_from_target = distance(pos, target_pos);
     activated = float(time < TTL) * activated;
 
+    float active_time = (time/TTL) * activated;
 
     // vec2 acc = normalize(target_pos - pos) * TARGET_ACCELERATION *
     //     (sin(time*0.5 + rand(vec2(float(id), pos.y))) +0.8);
     vec2 acc = normalize(target_pos - pos) * TARGET_ACCELERATION;
     // add noise to the acceleration
-    float angle = snoise(vec3(pos * 0.01, total_time * 0.235 + mod289(float(id))*0.01)) * 3.14159 * 6.;
-    acc += vec2(cos(angle), sin(angle)) * NOISE_ACCELERATION;
+    float angle = snoise(vec3(pos * 0.01 + id, total_time * 1.235 + mod289(float(id))*0.1)) * 3.14159 * 6.;
+    acc += vec2(cos(angle), sin(angle)) * (NOISE_ACCELERATION + active_time * 0.1);
 
     vel += acc * timestep * 60.0;
     // vel = acc * 5.0 + vel * 0.8;
     pos += vel * activated * 0.5;
     
-    posOut = vec4(pos, total_time, (time/TTL) * activated);
+    posOut = vec4(pos, total_time, active_time);
     velOut = vec4(vel, time, activated);
 }

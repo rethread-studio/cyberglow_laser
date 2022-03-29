@@ -189,11 +189,6 @@ public:
   FtraceVis ftrace_vis;
   Overview overview;
 
-  WebServerVis web_server_vis;
-  UserGrid user_grid;
-  vector<LaserText> laser_texts;
-  TextFlow text_flow;
-  string current_player_trail_id = "";
   // Dimensions of the laser canvas
   int width = 1920;
   int halfw = width / 2;
@@ -213,10 +208,11 @@ public:
 
   float dt = 0.0;
 
-  VisMode vis_mode = VisMode::FTRACE;
+  VisMode vis_mode = VisMode::ZOOMED_OUT;
   Transition transition;
   bool visualisation_enabled = true;
   bool automatic_transitions = false;
+  double last_transition_enable_time = 0.0;
   bool use_fixed_order_transitions = true;
   bool transition_at_new_question = false;
   bool transition_at_answer = false;

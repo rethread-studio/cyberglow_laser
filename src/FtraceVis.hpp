@@ -261,6 +261,11 @@ public:
     fade_alpha_change_per_sec = 1.0 / transition_time;
   }
 
+  void activate_between_transition() {
+
+    // There was a transition message, but we are not transitioning the visuals
+  }
+
   void register_ftrace_trigger(string type) {}
 
   void register_event(string ftrace_kind) {
@@ -320,7 +325,7 @@ public:
 
   void update(float dt) {
     time_since_enabled += dt;
-    fade_alpha += fade_alpha_change_per_sec * dt;
+    fade_alpha -= fade_alpha_change_per_sec * dt;
     for (auto &es : event_stats) {
       es.second.update(dt);
     }

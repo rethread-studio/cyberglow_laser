@@ -143,6 +143,7 @@ public:
 
   bool enable_flicker_labels = true;
   bool enable_labels_trigger = true;
+  bool enable_geography_graphics = false;
 
   bool finished_init = false;
   int text_index = 0;
@@ -281,6 +282,9 @@ public:
     fade_alpha_change_per_sec = 1.0 / time_to_fade_out;
     enabled = false;
   }
+  void activate_between_transition() {
+    enable_geography_graphics = !enable_geography_graphics;
+  }
 
   void draw_symbols() {
     ofColor color = ofColor(128, 0, 255);
@@ -311,6 +315,7 @@ public:
 
   void update(float dt) {
     time_since_enabled += dt;
+    fade_alpha -= fade_alpha_change_per_sec;
     // for(auto& text : location_texts) {
     //     text.update();
     // }
@@ -481,12 +486,13 @@ public:
     ofSetColor(255, 150);
     fboTextFade.draw(width * -0.5, height * -0.5, width, height);
 
-    // draw_geography(large_font);
-    // if(time_since_enabled < 10.0) {
-    //   draw_title(width, height, large_font);
-    // } else if(time_since_enabled > 20.0 && time_since_enabled < 30.0) {
-    //   draw_geography(large_font);
-    // }
+    if (time_since_enabled < 15.0) {
+      draw_title(width, height, large_font);
+    } else if (time_since_enabled > 20.0) {
+      if (enable_geography_graphics) {
+        draw_geography(large_font);
+      }
+    }
   }
 
   void draw_text(ofTrueTypeFont &font) {
@@ -514,7 +520,7 @@ public:
     ofRotateRad(0.15);
     ofTranslate(0, -50, 0);
     font.drawString("Amsterdam", -700, -150);
-    font.drawString("Stockholm", -450, 380);
+    font.drawString("Stockholm", -370, 250);
     // ofRotateRad(line_rotation);
     // ofDrawRectangle(glm::vec2(-1200, line_y), 2400, 4);
 
@@ -527,10 +533,10 @@ public:
     ofSetLineWidth(5);
     ofDrawRectangle(glm::vec2(width * -0.5 + margin, height * -0.5 + margin),
                     width - (margin * 2), height - (margin * 2));
-    font.drawString("NETWORK", -100, height * 0.5 - margin - 30);
+    font.drawString("NETWORK", -300, height * 0.5 - margin - 30);
     ofPushMatrix();
     ofRotateRad(PI);
-    font.drawString("NETWORK", -100, height * 0.5 - margin - 30);
+    font.drawString("NETWORK", -300, height * 0.5 - margin - 30);
 
     ofPopMatrix();
   }

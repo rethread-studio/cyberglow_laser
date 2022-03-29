@@ -18,7 +18,13 @@ void main(){
     gl_Position = modelViewProjectionMatrix * pos;
 
     float time_alpha = (pow(sin(time * 3.1415), 2.0)) * 0.2 + 0.01;
-    vertColor = vec4(time*0.24 + (sin(total_time * 0.01) * 0.4 + 0.4), time* 0.91 - (sin(total_time * 0.0072362) * 0.4 + 0.4), 1.0 - 0.84 * time, time_alpha);
+    time_alpha *= float(time > 0.0); // Make sure deactivated particles are completely transparent
+    vertColor = vec4(
+        clamp(time*0.5 + (sin(total_time * 0.005) * 0.2 + 0.2), 0., 1.),
+        clamp((sin(total_time * 0.072362) * 0.4 + 0.4), 0., 1.),
+        1.0 - 0.84 * pow(time, 2.0) - (sin(total_time * 0.072362) * 0.08 + 0.08),
+        time_alpha);
+
     
     gl_PointSize = 1.0;
 }
