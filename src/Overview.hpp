@@ -144,6 +144,7 @@ public:
   bool enable_flicker_labels = true;
   bool enable_labels_trigger = true;
   bool enable_geography_graphics = false;
+    float brightness_fade_add = 0.0;
 
   bool finished_init = false;
   int text_index = 0;
@@ -257,6 +258,7 @@ public:
 
     fade_alpha = 1.0;
     fade_alpha_change_per_sec = 0.0;
+    brightness_fade_add = 0.0;
 
     enable_flicker_labels = true;
     enabled = true;
@@ -283,6 +285,8 @@ public:
     enabled = false;
   }
   void activate_between_transition() {
+    brightness_fade_add = ofRandom(-0.005, 0.003);
+    cout << "brightness_fade_add: " << brightness_fade_add << endl;
     enable_geography_graphics = !enable_geography_graphics;
   }
 
@@ -315,7 +319,8 @@ public:
 
   void update(float dt) {
     time_since_enabled += dt;
-    fade_alpha -= fade_alpha_change_per_sec;
+    fade_alpha -= fade_alpha_change_per_sec * dt;
+    fade_alpha = ofClamp(fade_alpha, 0.0, 1.0);
     // for(auto& text : location_texts) {
     //     text.update();
     // }
@@ -413,12 +418,12 @@ public:
     if (enabled) {
       // trailShader.setUniform1f("brightnessFade", 0.9995);
       trailShader.setUniform1f("brightnessFade",
-                               0.9995 + sin(ofGetElapsedTimef() * 1.2) * 0.002 +
+                               0.9995 + brightness_fade_add + sin(ofGetElapsedTimef() * 1.2) * 0.002 +
                                    0.002);
       trailShader.setUniform1f("brightnessFadeLow", 2.4);
     } else {
       trailShader.setUniform1f("brightnessFade", 0.998);
-      trailShader.setUniform1f("brightnessFadeLow", 0);
+      trailShader.setUniform1f("brightnessFadeLow", 2);
     }
     trailShader.setUniform2f("resolution", glm::vec2(width, height));
     trailShader.setUniformTexture("tex0", fboScreen.getTextureReference(), 1);
@@ -433,7 +438,7 @@ public:
     trailShader.end();
     fboFade.end();
 
-    ofSetColor(255, fade_alpha * 255);
+    ofSetColor(255, (1.0-pow(1.0-fade_alpha, 2.0)) * 255);
     // ofDisableBlendMode();
     fboFade.draw(width * -0.5, height * -0.5, width, height);
     // fboScreen.draw(width*-0.5, height*-0.5, width, height);

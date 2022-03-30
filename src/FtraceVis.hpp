@@ -179,6 +179,7 @@ public:
   float dot_on_time = 0.05;
   float fade_alpha = 1.0;
   float fade_alpha_change_per_sec = 0.0;
+    float brightness_fade_add = 0.0;
 
   bool enabled = false;
   float time_since_enabled = 0;
@@ -241,6 +242,7 @@ public:
     enabled = true;
     fade_alpha = 1.0;
     fade_alpha_change_per_sec = 0.0;
+    brightness_fade_add = 0.0;
     fboScreen.begin();
     ofClear(0.0);
     fboScreen.end();
@@ -264,6 +266,7 @@ public:
   void activate_between_transition() {
 
     // There was a transition message, but we are not transitioning the visuals
+    brightness_fade_add = ofRandom(-0.002, 0.001);
   }
 
   void register_ftrace_trigger(string type) {}
@@ -400,7 +403,7 @@ public:
     trailShader.setUniform1f("fadeCoeff", 1.001);
     if (enabled) {
       trailShader.setUniform1f("brightnessFade",
-                               1.0015 -
+                               1.0015 + brightness_fade_add -
                                    (sin(ofGetElapsedTimef() * 0.087) * 0.0025));
       trailShader.setUniform1f("brightnessFadeLow", 2.5);
     } else {
