@@ -4,6 +4,7 @@
 //--------------------------------------------------------------
 void ofApp::setup() {
 
+  last_transition_enable_time = ofGetElapsedTimef();
   // OSC setup
   receiver.setup(PORT);
 
@@ -15,44 +16,20 @@ void ofApp::setup() {
   triangle_positions[2] =
       glm::vec2(width * 0.8 - halfw, height * 0.85 - halfh); // user
 
-  for (int i = 0; i < 3; i++) {
-    event_line_columns.push_back(EventLineColumn(
-        glm::vec2(i * (width / 3) - halfw, -halfh), width / 3, height));
-  }
-
-
-
   font.load("FT88-Expanded.otf", 20);
   large_font.load("FT88-Expanded.otf", 60);
 
-  user_grid = UserGrid(width, height);
   ftrace_vis.init(width, height);
   overview.init(triangle_positions, width, height, font);
-  text_flow = TextFlow(width, height);
   transition.type = TransitionType::NONE; // disable the transition at startup
 
-  auto text_options = LaserTextOptions();
-  text_options.size = 80.0;
-  text_options.color = ofColor::red;
-
-  laser_texts.push_back(
-      LaserText("ABCDEFGHIJKLMNOPQ", text_options, 5,
-                glm::vec2(width * 0.05 - halfw, height * 0.5 - halfh)));
-  laser_texts.push_back(
-      LaserText("RSTUVXY0123456789", text_options, 5,
-                glm::vec2(width * 0.05 - halfw, height * 0.2 - halfh)));
-  // laser_texts.push_back(LaserText("MOVE OPEN FILE", text_options, 4,
-  // glm::vec2(width * 0.2 - halfw, height * 0.2 - halfh + (text_options.size *
-  // 2))));
-  //
-
-  switch(vis_mode) {
-    case VisMode::FTRACE:
-      ftrace_vis.enable();
-      break;
-    case VisMode::ZOOMED_OUT:
-      overview.enable();
-      break;
+  switch (vis_mode) {
+  case VisMode::FTRACE:
+    ftrace_vis.enable();
+    break;
+  case VisMode::ZOOMED_OUT:
+    overview.enable();
+    break;
   }
   ofBackground(0);
 }
@@ -83,13 +60,7 @@ void ofApp::update() {
       }
     }
 
-    // For some visualisations, transition to self automatically
-    // if (!transition.active() && transition_chain.size() == 0 &&
-    //     (vis_mode == VisMode::FTRACE)) {
-    //   transitionToFrom(vis_mode, vis_mode);
-    // }
-
-  switch (vis_mode) {
+    switch (vis_mode) {
     case VisMode::FTRACE: {
       ftrace_vis.update(dt);
       break;
@@ -98,14 +69,12 @@ void ofApp::update() {
       overview.update(dt);
       break;
     }
-  }
-
+    }
 
     noise_counter += 0.001;
     rot_x = ofNoise(noise_counter, ofGetElapsedTimef() * 0.01) * 2.0 - 1.0;
     rot_y =
         ofNoise(noise_counter, ofGetElapsedTimef() * 0.01 + 2534.0) * 2.0 - 1.0;
-
   }
 }
 
@@ -116,27 +85,23 @@ void ofApp::draw() {
 
   ofPushMatrix();
   ofTranslate(halfw, halfh, 0.0);
-  // ofRotateRad(rot_x * 0.5, 0.0, 1.0, 0.0);
-  // ofRotateRad(rot_y * 0.5, 1.0, 0.0, 0.0);
-  //
-  // Translating the coordinate system also works
 
   if (transition.active()) {
     transition.update(dt);
-    if(!transition.active()) {
+    if (!transition.active()) {
       cout << "transition was just finished, activate" << endl;
       vis_mode = transition.to_vis;
-      switch(vis_mode) {
-        case VisMode::FTRACE:
-          ftrace_vis.enable();
-          break;
-        case VisMode::ZOOMED_OUT:
-          overview.enable();
-          break;
+      switch (vis_mode) {
+      case VisMode::FTRACE:
+        ftrace_vis.enable();
+        break;
+      case VisMode::ZOOMED_OUT:
+        overview.enable();
+        break;
       }
     }
   }
-      drawVisualisation(vis_mode, 1.0);
+  drawVisualisation(vis_mode, 1.0);
 
   ofPopMatrix();
   // sends points to the DAC
@@ -146,44 +111,6 @@ void ofApp::addActivityPoint(int source) {
   if (source >= 3) {
     return;
   }
-/*if (source != TriangleVIS) {
-    float offset_angle = ofRandom(0, TWO_PI);
-    float offset = ofRandom(0, width * 0.07);
-    glm::vec2 position =
-        triangle_positions[source] -
-        glm::vec2(cos(offset_angle) * offset, sin(offset_angle) * offset);
-    auto ap = ActivityPoint(position, glm::vec2(0, 0), ofColor::green);
-    glm::vec2 destination = glm::vec2(0, 0);
-    switch (source) {
-    case 0:
-      destination = triangle_positions[1]; bb
-      break;
-    case 1:
-      if (ofRandom(0, 1) > 0.5) {
-        destination = triangle_positions[0];
-      } else {
-        destination = triangle_positions[2];
-      }
-      break;
-    case 2:
-      destination = triangle_positions[1];
-      break;
-    }
-    float vel_amp = ofRandom(0.5, 4.0);
-    ap.launch_towards(destination, vel_amp);
-    ap.grow(ofRandom(0.0, 0.5));
-    activity_points.push_back(ap);
-    while (activity_points.size() > max_num_activity_points) {
-      activity_points.erase(activity_points.begin());
-    }
-  }
-  float activity_level_increase = 0.1;
-  if (source == TriangleVIS) {
-    activity_level_increase = 0.00006;
-  }
-  triangle_activity[source] += activity_level_increase;
-
-  }*/
   overview.trigger_activity(source);
 }
 
@@ -225,19 +152,29 @@ void ofApp::checkOscMessages() {
         ftrace_vis.register_event(m.getArgAsString(0));
         // cout << "ftrace: " << m.getArgAsString(0) << endl;
         addActivityPoint(TriangleVIS);
-      }
-
-      else if (m.getAddress() == "/idle") {
-        // cout << "/idle: " << m.getArgAsString(0) << endl;
-        auto arg = m.getArgAsString(0);
-        if (arg == "on") {
-          idle_mode_on = true;
-          transition_chain.clear();
-          transitionToFrom(vis_mode, idle_vis_mode);
+      } else if (m.getAddress() == "/ftrace_trigger") {
+        overview.register_ftrace_trigger(m.getArgAsString(0));
+        ftrace_vis.register_ftrace_trigger(m.getArgAsString(0));
+      } else if (m.getAddress() == "/transition") {
+        float time_to_next_transition = m.getArgAsFloat(0);
+        if (visualisation_enabled) {
+          if (ofGetElapsedTimef() - last_transition_enable_time >
+              time_per_vis) {
+            // Stay in one vis for a longer time
+            transition_from_current_visualisation(time_to_next_transition);
+          } else {
+            switch (vis_mode) {
+            case VisMode::FTRACE:
+              ftrace_vis.activate_between_transition();
+              break;
+            case VisMode::ZOOMED_OUT:
+              overview.activate_between_transition();
+              break;
+            }
+          }
         } else {
-          // off
-          idle_mode_on = false;
-          transitionToFrom(idle_vis_mode, VisMode::ZOOMED_OUT);
+          enable_next_visualisation();
+          last_transition_enable_time = ofGetElapsedTimef();
         }
       } else {
         // cout << "Received unknown message to " << m.getAddress() << endl;
@@ -247,10 +184,35 @@ void ofApp::checkOscMessages() {
   }
 }
 
+void ofApp::transition_from_current_visualisation(float transition_time) {
+  visualisation_enabled = false;
+  switch (vis_mode) {
+  case VisMode::ZOOMED_OUT:
+    overview.disable(transition_time);
+    break;
+  case VisMode::FTRACE:
+    ftrace_vis.disable(transition_time);
+    break;
+  }
+}
+void ofApp::enable_next_visualisation() {
+
+  switch (vis_mode) {
+  case VisMode::ZOOMED_OUT:
+    vis_mode = VisMode::FTRACE;
+    ftrace_vis.enable();
+    break;
+  case VisMode::FTRACE:
+    vis_mode = VisMode::ZOOMED_OUT;
+    overview.enable();
+    break;
+  }
+  visualisation_enabled = true;
+}
+
 void ofApp::parseOscMessage(string origin, string action, string arguments) {
   std::string delimiter = ";";
   if (origin == "node") {
-    web_server_vis.register_node(action);
 
     if (action == "async after Timeout") {
       addActivityPoint(TriangleSERVER);
@@ -278,7 +240,6 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
 
     string text = action; // + " " + arguments;
     if (action != "userAnswer") {
-      text_flow.add_text(text, width, height);
     }
     if (action == "userAnswer") {
       if (automatic_transitions && transition_at_answer &&
@@ -287,62 +248,8 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
       }
       answer_for_current_question_received = true;
     }
-    user_grid.register_event(action, arguments);
     addActivityPoint(TriangleUSER);
     if (action == "move") {
-      // id, x, y, width_cells, height_cells
-      arguments += ';';
-      string user_id = "";
-      int x = 0, y = 0;
-      int w = 1, h = 1;
-
-      size_t pos = 0;
-      std::string token;
-      int token_num = 0;
-      while ((pos = arguments.find(delimiter)) != std::string::npos) {
-        token = arguments.substr(0, pos);
-        switch (token_num) {
-        case 0:
-          user_id = token;
-          break;
-        case 1:
-          x = stoi(token);
-          break;
-        case 2:
-          y = stoi(token);
-          break;
-        case 3:
-          w = stoi(token);
-          break;
-        case 4:
-          h = stoi(token);
-          break;
-        }
-        token_num++;
-        arguments.erase(0, pos + delimiter.length());
-      }
-      if (token_num >= 3) {
-        float grid_x, grid_y;
-        if (token_num == 3) { // message without w/h
-          grid_x = width / 45;
-          grid_y = height / 25;
-        } else if (token_num == 5) { // message with w/h
-          grid_x = float(width) / float(w + 2);
-          grid_y = float(height) / float(h + 2);
-        }
-        auto it = player_trails.find(user_id);
-        // The + grid_x at the end is for margins
-        float calc_x = (x * grid_x) - halfw + grid_x;
-        float calc_y = (y * grid_y) - halfh + grid_y;
-        if (it == player_trails.end()) {
-          auto pt = PlayerTrail();
-          pt.move_to_point(calc_x, calc_y);
-          player_trails.insert(
-              make_pair<string, PlayerTrail>(move(user_id), move(pt)));
-        } else {
-          it->second.move_to_point(calc_x, calc_y);
-        }
-      }
 
     } else if (action == "enterAnswer") {
       // user moves inside the answer zone
@@ -352,16 +259,12 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
 
     } else if (action == "new") {
       string user_id = arguments;
-      player_trails.insert(
-          make_pair<string, PlayerTrail>(move(user_id), PlayerTrail()));
     }
   } else if (origin == "server") {
-    web_server_vis.register_server(action);
     addActivityPoint(TriangleSERVER);
     if (action == "file") {
     }
   } else if (origin == "mongodb") {
-    web_server_vis.register_mongodb(action);
   }
 }
 
@@ -386,7 +289,8 @@ void ofApp::drawVisualisation(VisMode vis, float scale) {
     //   }
     //   ofNoFill();
     //   ofSetColor(ofColor::blue);
-    //   ofDrawCircle(triangle_positions[i].x, triangle_positions[i].y, radius);
+    //   ofDrawCircle(triangle_positions[i].x, triangle_positions[i].y,
+    //   radius);
     // }
     // for(auto& elc : event_line_columns) {
     //     elc.draw(laser, scan_x, scan_width);
@@ -520,7 +424,7 @@ void ofApp::gotMessage(ofMessage msg) {}
 void ofApp::dragEvent(ofDragInfo dragInfo) {}
 
 int visModeCategory(VisMode vis) {
-  if (vis == VisMode::FTRACE ) {
+  if (vis == VisMode::FTRACE) {
     return TriangleVIS;
   } else if (vis == VisMode::ZOOMED_OUT) {
     return 3;
@@ -539,8 +443,8 @@ void ofApp::transitionToFrom(VisMode from, VisMode to) {
   t.to_vis = to;
   transition = t;
   if (from == VisMode::ZOOMED_OUT) {
-    overview.disable();
+    overview.disable(3.0);
   } else {
-    ftrace_vis.disable();
+    ftrace_vis.disable(3.0);
   }
 }

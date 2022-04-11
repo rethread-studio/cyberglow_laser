@@ -18,7 +18,7 @@ layout(location = 1) out vec4 velOut;
 
 const float MIN_DIST_FROM_TARGET = 10.;
 const float TARGET_ACCELERATION = 0.11;
-const float NOISE_ACCELERATION = 0.15;
+const float NOISE_ACCELERATION = 0.09;
 
 float dx = 0.0;
 float dy = 0.0;
@@ -138,7 +138,7 @@ void main(){
     acc += vec2(cos(angle), sin(angle)) * (NOISE_ACCELERATION * (time_weight));
 
     // move slightly away from the target to create an arc
-    acc += vec2(0.8, 0.3) * pow(time_weight, 3.0) * 0.15;
+    acc += vec2(0.9, 0.2) * pow(time_weight, 3.0) * 0.10;
 
     // vel += acc * timestep * 60.;
     vel = acc * 5.0 + vel * 0.8;
