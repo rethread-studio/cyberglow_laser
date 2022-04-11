@@ -494,6 +494,11 @@ time_since_enabled = 0.0;
 
       ofPopMatrix();
     }
+    void draw_system_info(ofTrueTypeFont& font) {
+      // kernel version, docker, ftrace, openframeworks, browser
+      font.drawString("linux kernel 5.13.0-39", triangle_positions[TriangleVIS].x, triangle_positions[TriangleVIS].y);
+      font.drawString("browser", triangle_positions[TriangleUSER].x, triangle_positions[TriangleUSER].y);
+    }
     void draw_title(int width, int height, ofTrueTypeFont& font) {
       int margin = width * 0.05;
       ofSetColor(255);

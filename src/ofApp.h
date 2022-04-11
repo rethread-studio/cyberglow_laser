@@ -221,7 +221,7 @@ public:
   VisMode idle_vis_mode = VisMode::FTRACE;
   bool idle_mode_on = false;
   int vis_mode_order_index = 0;
-  float time_per_vis = 40.0;
+  float time_per_vis = 90.0;
   float next_transition_countdown = time_per_vis;
   vector<Transition> transition_chain;
 
