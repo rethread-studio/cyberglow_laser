@@ -261,6 +261,7 @@ void ofApp::parseOscMessage(string origin, string action, string arguments) {
       answer_for_current_question_received = true;
     }
     addActivityPoint(TriangleUSER);
+    overview.register_user_event_name(action);
     if (action == "move") {
 
     } else if (action == "enterAnswer") {
