@@ -166,10 +166,10 @@ void ofApp::checkOscMessages() {
             ofxOscMessage mess;
             switch (vis_mode) {
             case VisMode::FTRACE:
-              mess.addSymbolArg("ftrace");
+              mess.addStringArg("ftrace");
               break;
             case VisMode::ZOOMED_OUT:
-              mess.addSymbolArg("overview");
+              mess.addStringArg("overview");
               break;
             }
             mess.setAddress("/transition_from_vis");
