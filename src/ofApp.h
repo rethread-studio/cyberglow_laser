@@ -227,6 +227,7 @@ public:
 
   // **************** OSC ****************
   ofxOscReceiver receiver;
+  ofxOscSender osc_sender;
   int PORT = 57131;
   void checkOscMessages();
   void parseOscMessage(string origin, string action, string arguments);
