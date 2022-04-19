@@ -7,6 +7,7 @@ void ofApp::setup() {
   last_transition_enable_time = ofGetElapsedTimef();
   // OSC setup
   receiver.setup(PORT);
+  osc_sender.setup("127.0.0.1", 57121);
 
   // Set up triangle positions
   triangle_positions[0] =
@@ -178,6 +179,17 @@ void ofApp::checkOscMessages() {
               time_per_vis) {
             // Stay in one vis for a longer time
             transition_from_current_visualisation(time_to_next_transition);
+            ofxOscMessage mess;
+            switch (vis_mode) {
+            case VisMode::FTRACE:
+              mess.addStringArg("ftrace");
+              break;
+            case VisMode::ZOOMED_OUT:
+              mess.addStringArg("overview");
+              break;
+            }
+            mess.setAddress("/transition_from_vis");
+            osc_sender.sendMessage(mess, false);
           } else {
             switch (vis_mode) {
             case VisMode::FTRACE:
