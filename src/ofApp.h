@@ -208,7 +208,7 @@ public:
 
   float dt = 0.0;
 
-  VisMode vis_mode = VisMode::ZOOMED_OUT;
+  VisMode vis_mode = VisMode::FTRACE;
   Transition transition;
   bool visualisation_enabled = true;
   bool automatic_transitions = false;
@@ -224,6 +224,9 @@ public:
   float time_per_vis = 90.0;
   float next_transition_countdown = time_per_vis;
   vector<Transition> transition_chain;
+
+
+  ofShader vignetteShader;
 
   // **************** OSC ****************
   ofxOscReceiver receiver;

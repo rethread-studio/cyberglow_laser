@@ -407,7 +407,6 @@ public:
     opc_user.draw(modelViewProjectionMatrix);
     opc_server_to_user.draw(modelViewProjectionMatrix);
     opc_server_to_vis.draw(modelViewProjectionMatrix);
-    opc_ftrace.draw(modelViewProjectionMatrix);
 
     // debug box drawing
     //  ofSetColor(0, 255, 0);
@@ -454,11 +453,16 @@ public:
     fboScreen.draw(0, 0);
     // ofRect(0, 0, 1920, 1080);
     trailShader.end();
+
     fboFade.end();
 
     ofSetColor(255, (1.0-pow(1.0-fade_alpha, 2.0)) * 255);
     // ofDisableBlendMode();
     fboFade.draw(width * -0.5, height * -0.5, width, height);
+    ofSetColor(255, 255);
+    cam->begin();
+    opc_ftrace.draw(modelViewProjectionMatrix);
+    cam->end();
     // fboScreen.draw(width*-0.5, height*-0.5, width, height);
     // for(auto& ft : flicker_texts) {
     //   ft.draw(font);
@@ -521,6 +525,8 @@ public:
     fboText.draw(0, 0);
     // ofRect(0, 0, 1920, 1080);
     trailOverlayShader.end();
+
+
     fboTextFade.end();
 
     ofSetColor(255, 150);

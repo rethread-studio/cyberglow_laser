@@ -31,6 +31,8 @@ void ofApp::setup() {
     overview.enable();
     break;
   }
+
+  vignetteShader.load("shaders/vignette/shader");
   ofBackground(0);
 }
 
@@ -81,6 +83,7 @@ void ofApp::update() {
 //--------------------------------------------------------------
 void ofApp::draw() {
 
+  ofClear(0);
   ofBackground(0);
 
   ofPushMatrix();
@@ -103,8 +106,21 @@ void ofApp::draw() {
   }
   drawVisualisation(vis_mode, 1.0);
 
+
+  ofPlanePrimitive plane;
+  plane.set(width, height, 2, 2, OF_PRIMITIVE_TRIANGLES);
+
+  ofEnableAlphaBlending();
+  ofSetColor(255, 255);
+  vignetteShader.begin();
+  vignetteShader.setUniform2f("resolution", width, height);
+  vignetteShader.setUniform1f("margin", 30);
+  vignetteShader.setUniform1f("time", ofGetElapsedTimef());
+  // ofDrawRectangle(0, 0, width, height);
+  plane.draw();
+  vignetteShader.end();
+
   ofPopMatrix();
-  // sends points to the DAC
 }
 
 void ofApp::addActivityPoint(int source) {

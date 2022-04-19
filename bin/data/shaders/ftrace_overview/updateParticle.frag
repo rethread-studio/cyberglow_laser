@@ -107,7 +107,15 @@ float snoise(vec3 v){
                                 dot(p2,x2), dot(p3,x3) ) );
 }
 
+mat2 rotate2d(float _angle){
+    return mat2(cos(_angle),-sin(_angle),
+                sin(_angle),cos(_angle));
+}
+
 const float PI = 3.14159;
+const vec2 zone1 = vec2(-100, 0);
+const vec2 zone2 = vec2(100, 900);
+const vec2 zone_center = vec2(-250, 0);
 void main(){
     int id = int(texCoordVarying.s) + int(texCoordVarying.t)*int(textureSize(particles0).x);
     vec4 pos_data = texture(particles0, texCoordVarying.st);
@@ -146,7 +154,20 @@ void main(){
     vel += acc * timestep * 60.0;
     // vel = acc * 5.0 + vel * 0.8;
     pos += vel * activated * 0.5;
-    
+
+
+//     // Move pos to center, rotate, and compare
+//     vec2 pos1 = pos - origin_pos;
+//     pos1 = rotate2d( PI*-0.25 ) * pos1;
+//     // Reverse the velocity if inside the forbidden zone
+//     float is_inside_forbidden = float(
+//         pos1.x >= zone1.x && pos1.x <= zone2.x &&
+//         pos1.y >= zone1.y && pos1.y <= zone2.y
+// );
+//     vec2 vel_from_zone_center = (pos - zone_center);
+//     pos += vel_from_zone_center * is_inside_forbidden;
+//     vel += vel*-2*is_inside_forbidden;
+
     posOut = vec4(pos, total_time, active_time);
     velOut = vec4(vel, time, activated);
 }
