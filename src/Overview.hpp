@@ -136,7 +136,9 @@ public:
 class Overview {
 public:
   glm::vec2 triangle_positions[3];
+  glm::vec2 triangle_positions_flipped[3];
   vector<FlickerText> flicker_texts;
+  vector<FlickerText> flicker_texts_flipped;
   bool enabled = false;
   float time_since_enabled = 0.0;
     vector<string> user_events;
@@ -147,6 +149,7 @@ public:
     bool enable_user_event_text = true;
     bool enable_system_info_text = false;
     float brightness_fade_add = 0.0;
+    bool flip_text = true;
 
   bool finished_init = false;
   int text_index = 0;
@@ -184,13 +187,25 @@ public:
     flicker_texts.push_back(
         FlickerText("CORE", triangle_positions_[TriangleVIS] + o));
     flicker_texts.push_back(
-        FlickerText("SERVER", triangle_positions_[TriangleSERVER] + o));
+        FlickerText("CLOUD", triangle_positions_[TriangleSERVER] + o));
     flicker_texts.push_back(
         FlickerText("USER", triangle_positions_[TriangleUSER] + o));
 
     flicker_texts[TriangleVIS].pos.x -= font.stringWidth("CORE") * 0.5;
     flicker_texts[TriangleSERVER].pos.x -= font.stringWidth("CLOUD") * 0.5;
-    flicker_texts[TriangleUSER].pos.x -= font.stringWidth("PLAYER") * 0.5;
+    flicker_texts[TriangleUSER].pos.x -= font.stringWidth("USER") * 0.5;
+
+
+    flicker_texts_flipped.push_back(
+        FlickerText("CORE", triangle_positions_[TriangleVIS] * glm::vec2(-1, -1)));
+    flicker_texts_flipped.push_back(
+        FlickerText("CLOUD", triangle_positions_[TriangleSERVER] * glm::vec2(-1, -1) ));
+    flicker_texts_flipped.push_back(
+        FlickerText("USER", triangle_positions_[TriangleUSER] * glm::vec2(-1, -1) ));
+
+    flicker_texts_flipped[TriangleVIS].pos.x -= font.stringWidth("CORE") * 0.5;
+    flicker_texts_flipped[TriangleSERVER].pos.x -= font.stringWidth("CLOUD") * 0.5;
+    flicker_texts_flipped[TriangleUSER].pos.x -= font.stringWidth("PLAYER") * 0.5;
 
     for (int i = 0; i < 3; i++) {
       triangle_positions[i] = triangle_positions_[i];
@@ -242,6 +257,10 @@ public:
     for (int i = 0; i < 3; i++) {
       triangle_positions[i].y = -triangle_positions[i].y;
     }
+    // set the flipped positions (for upside down text)
+    for (int i = 0; i < 3; i++) {
+      triangle_positions_flipped[i] = triangle_positions[i] * glm::vec2(-1, -1);
+    }
   }
 
   void enable() {
@@ -277,9 +296,11 @@ public:
   }
   void activate_between_transition() {
     brightness_fade_add = ofRandom(-0.005, 0.003);
+    if(ofRandom(0.0, 1.0) > 0.9) {
+      flip_text = !flip_text;
+    }
     cout << "brightness_fade_add: " << brightness_fade_add << endl;
     int option = ofRandom(4);
-    cout << "option: " << option << endl;
     switch(option) {
       case 0:
         if(!enable_geography_graphics) {
@@ -457,11 +478,11 @@ public:
     // if (enable_flicker_labels && ofRandom(0.0, 1.0) > 0.8) {
     //   draw_text(font);
     // }
-    if (enable_labels_trigger && time_since_enabled > 3.0 && enabled) {
+    if (enable_labels_trigger && time_since_enabled > 15.0 && enabled) {
       draw_text(font);
       enable_labels_trigger = false;
     }
-    if (enable_user_event_text) {
+    if (enable_user_event_text && time_since_enabled > 15.0 && enabled) {
       for(auto& text: user_events) {
         float x = ofRandom(-250, 50);
         float y = ofRandom(-250, 50);
@@ -519,8 +540,17 @@ public:
 
   void draw_text(ofTrueTypeFont &font) {
     ofSetColor(200);
-    for (auto &lt : flicker_texts) {
-      font.drawString(lt.text, lt.pos.x, lt.pos.y);
+    if(!flip_text) {
+      for (auto &lt : flicker_texts) {
+        font.drawString(lt.text, lt.pos.x, lt.pos.y);
+      }
+    } else {
+      ofPushMatrix();
+      ofRotateRad(PI);
+      for (auto &lt : flicker_texts_flipped) {
+        font.drawString(lt.text, lt.pos.x, lt.pos.y);
+      }
+      ofPopMatrix();
     }
   }
 
@@ -538,8 +568,14 @@ public:
     ofPushMatrix();
     ofRotateRad(0.15);
     ofTranslate(0, -50, 0);
-    font.drawString("Amsterdam", -700, -150);
-    font.drawString("Stockholm", -370, 250);
+    if(flip_text) {
+      ofRotateRad(PI);
+      font.drawString("Amsterdam", -500, 200);
+      font.drawString("Stockholm", -500, -220);
+    } else {
+      font.drawString("Amsterdam", -600, -200);
+      font.drawString("Stockholm", -370, 250);
+    }
     // ofRotateRad(line_rotation);
     // ofDrawRectangle(glm::vec2(-1200, line_y), 2400, 4);
 
@@ -547,13 +583,26 @@ public:
   }
     void draw_system_info(ofTrueTypeFont& font) {
       // kernel version, docker, ftrace, openframeworks, browser
-      font.drawString("linux kernel 5.13.0-39", triangle_positions[TriangleVIS].x- 130, triangle_positions[TriangleVIS].y - 100);
-      font.drawString("openFrameworks 0.11", triangle_positions[TriangleVIS].x - 200, triangle_positions[TriangleVIS].y + 100);
-      font.drawString("browser", triangle_positions[TriangleUSER].x, triangle_positions[TriangleUSER].y - 80);
-      font.drawString("iOS", triangle_positions[TriangleUSER].x - 150, triangle_positions[TriangleUSER].y - 40);
-      font.drawString("Android", triangle_positions[TriangleUSER].x - 40, triangle_positions[TriangleUSER].y);
-      font.drawString("node.js v17", triangle_positions[TriangleSERVER].x - 80, triangle_positions[TriangleSERVER].y - 30);
-      font.drawString("Docker 20.10.14, build a224086", triangle_positions[TriangleSERVER].x - 330, triangle_positions[TriangleSERVER].y + 100);
+      if(!flip_text) {
+        font.drawString("linux kernel 5.13.0-39", triangle_positions[TriangleVIS].x- 130, triangle_positions[TriangleVIS].y - 100);
+        font.drawString("openFrameworks 0.11", triangle_positions[TriangleVIS].x - 200, triangle_positions[TriangleVIS].y + 100);
+        font.drawString("browser", triangle_positions[TriangleUSER].x, triangle_positions[TriangleUSER].y - 140);
+        font.drawString("iOS", triangle_positions[TriangleUSER].x - 150, triangle_positions[TriangleUSER].y - 100);
+        font.drawString("Android", triangle_positions[TriangleUSER].x - 40, triangle_positions[TriangleUSER].y - 60);
+        font.drawString("node.js v17", triangle_positions[TriangleSERVER].x - 80, triangle_positions[TriangleSERVER].y - 30);
+        font.drawString("Docker 20.10.14", triangle_positions[TriangleSERVER].x - 330, triangle_positions[TriangleSERVER].y + 100);
+      } else {
+        ofPushMatrix();
+        ofRotateRad(PI);
+        font.drawString("linux kernel 5.13.0-39", triangle_positions_flipped[TriangleVIS].x- 520, triangle_positions_flipped[TriangleVIS].y - 100);
+        font.drawString("openFrameworks 0.11", triangle_positions_flipped[TriangleVIS].x - 550, triangle_positions_flipped[TriangleVIS].y + 100);
+        font.drawString("browser", triangle_positions_flipped[TriangleUSER].x, triangle_positions_flipped[TriangleUSER].y + 50);
+        font.drawString("iOS", triangle_positions_flipped[TriangleUSER].x - 150, triangle_positions_flipped[TriangleUSER].y + 90);
+        font.drawString("Android", triangle_positions_flipped[TriangleUSER].x - 40, triangle_positions_flipped[TriangleUSER].y + 130);
+        font.drawString("node.js v17", triangle_positions_flipped[TriangleSERVER].x - 80, triangle_positions_flipped[TriangleSERVER].y - 30);
+        font.drawString("docker 20.10.14", triangle_positions_flipped[TriangleSERVER].x - 330, triangle_positions_flipped[TriangleSERVER].y - 70);
+        ofPopMatrix();
+      }
     }
     void draw_title(int width, int height, ofTrueTypeFont& font) {
       int margin = width * 0.05;
